@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="light dark" />
+    <link rel="icon" href="data:," />
+    <title>KariSpace</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <style>
+      :root {
+        color-scheme: light dark;
+        --brand: #F47C20;
+        --brand-soft: #FDEBD9;
+        --brand-ink: #8A3E00;
+        --yellow: #FFD100;
+        --yellow-soft: #FFF3B0;
+        --bg: #F6F5F2;
+        --surface: #FFFFFF;
+        --surface-2: #EFEDE8;
+        --ink: #1C1710;
+        --ink-2: #5A5142;
+        --line: #E2DCD0;
+        --ok: #1E7A3C;
+        --ok-soft: #DDF2E2;
+        --warn: #9A6200;
+        --warn-soft: #FCEFC7;
+        --bad: #B3261E;
+        --bad-soft: #FADBD8;
+        --info: #1D5FA8;
+        --info-soft: #DCEBF9;
+        --shadow: 0 1px 2px rgba(28,23,16,.06), 0 8px 24px rgba(28,23,16,.07);
+        --radius: 14px;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --brand-soft: #4A2C10;
+          --brand-ink: #FFB877;
+          --yellow-soft: #4D3F00;
+          --bg: #16120D;
+          --surface: #211B14;
+          --surface-2: #2C251B;
+          --ink: #F7F1E6;
+          --ink-2: #C4BBA8;
+          --line: #3A3226;
+          --ok: #7BD79B;
+          --ok-soft: #173D26;
+          --warn: #FFCE6B;
+          --warn-soft: #453A10;
+          --bad: #FF9D94;
+          --bad-soft: #47201C;
+          --info: #8FC2F5;
+          --info-soft: #1B3350;
+          --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+        }
+      }
+      * { box-sizing: border-box; }
+      html { -webkit-text-size-adjust: 100%; }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", system-ui, sans-serif;
+        font-size: 15px;
+        line-height: 1.45;
+      }
+      h1, h2, h3, .poppins { font-family: "Poppins", "Inter", sans-serif; }
+      button { font: inherit; cursor: pointer; }
+      input, select, textarea { font: inherit; color: var(--ink); }
+      a { color: var(--brand-ink); }
+
+      /* ---------- Header / nav escritorio ---------- */
+      .topbar {
+        position: sticky; top: 0; z-index: 40;
+        background: var(--surface);
+        border-bottom: 3px solid var(--brand);
+      }
+      .topbar-in {
+        max-width: 1180px; margin: 0 auto; padding: 0 20px;
+        display: flex; align-items: center; gap: 18px; min-height: 58px;
+      }
+      .wordmark {
+        font-family: "Poppins", sans-serif; font-weight: 800; font-size: 21px;
+        letter-spacing: -.02em; white-space: nowrap; color: var(--ink);
+      }
+      .wordmark b { color: var(--brand); font-weight: 800; }
+      .wordmark .dot {
+        display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+        background: var(--yellow); margin-left: 2px; vertical-align: baseline;
+        box-shadow: 0 0 0 2px var(--ink);
+      }
+      .topnav { display: flex; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+      .topnav::-webkit-scrollbar { display: none; }
+      .topnav button {
+        border: 0; background: transparent; color: var(--ink-2);
+        font-weight: 600; font-size: 14px; padding: 9px 12px; border-radius: 9px;
+        white-space: nowrap; display: inline-flex; align-items: center; gap: 7px;
+      }
+      .topnav button svg { width: 17px; height: 17px; }
+      .topnav button:hover { background: var(--surface-2); color: var(--ink); }
+      .topnav button.active { background: var(--brand); color: #241300; }
+      .refresh-btn {
+        border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+        border-radius: 9px; padding: 8px 10px; display: inline-flex; align-items: center; gap: 6px;
+        font-weight: 600; font-size: 13px; white-space: nowrap;
+      }
+      .refresh-btn:hover { border-color: var(--brand); }
+      .refresh-btn svg { width: 16px; height: 16px; }
+      .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
+      @keyframes spin { to { transform: rotate(360deg); } }
+
+      /* ---------- Dock móvil ---------- */
+      .dock {
+        display: none;
+        position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+        background: var(--surface); border-top: 1px solid var(--line);
+        padding-bottom: env(safe-area-inset-bottom);
+        box-shadow: 0 -4px 18px rgba(0,0,0,.08);
+      }
+      .dock-in { display: grid; grid-template-columns: repeat(5, 1fr); }
+      .dock button {
+        border: 0; background: transparent; color: var(--ink-2);
+        display: flex; flex-direction: column; align-items: center; gap: 2px;
+        padding: 8px 2px 7px; font-size: 10px; font-weight: 600; line-height: 1.1;
+        min-height: 54px; justify-content: center;
+      }
+      .dock button svg { width: 20px; height: 20px; }
+      .dock button.active { color: var(--brand-ink); }
+      .dock button.active svg { color: var(--brand); }
+      .dock button.active .dock-label { color: var(--ink); }
+
+      main { max-width: 1180px; margin: 0 auto; padding: 22px 20px 40px; }
+      @media (max-width: 760px) {
+        .topnav { display: none; }
+        .dock { display: block; }
+        main { padding: 16px 14px 96px; }
+        .topbar-in { padding: 0 14px; }
+      }
+
+      /* ---------- Encabezado de módulo ---------- */
+      .mod-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+      .mod-head h1 { font-size: 26px; margin: 0; letter-spacing: -.01em; }
+      .mod-head p { margin: 3px 0 0; color: var(--ink-2); font-size: 14px; max-width: 560px; }
+      .mod-head .spacer { flex: 1; }
+      .btn {
+        border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 14px;
+        display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
+      }
+      .btn svg { width: 16px; height: 16px; }
+      .btn-primary { background: var(--brand); color: #241300; box-shadow: var(--shadow); }
+      .btn-primary:hover { background: #E06E0D; }
+      .btn-ghost { background: var(--surface); color: var(--ink); border: 1.5px solid var(--line); }
+      .btn-ghost:hover { border-color: var(--brand); }
+      .btn-danger { background: var(--bad-soft); color: var(--bad); }
+      .btn-small { padding: 6px 11px; font-size: 13px; border-radius: 8px; }
+
+      /* ---------- Tarjetas resumen ---------- */
+      .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+      .card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 18px; box-shadow: var(--shadow);
+      }
+      .card h3 { margin: 0 0 4px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
+      .card h3 svg { width: 18px; height: 18px; color: var(--brand); }
+      .big-num { font-family: "Poppins", sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1; }
+      .big-num.bad { color: var(--bad); }
+      .card .sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
+      .stat-row { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
+      .stat-row .st b { font-family: "Poppins", sans-serif; font-size: 20px; display: block; }
+      .stat-row .st span { font-size: 12px; color: var(--ink-2); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
+      .section-title { font-size: 19px; margin: 26px 0 12px; display: flex; align-items: center; gap: 9px; }
+      .section-title svg { width: 20px; height: 20px; color: var(--brand); }
+      .section-title.bad svg { color: var(--bad); }
+
+      /* ---------- Barras de progreso ---------- */
+      .bar { height: 14px; border-radius: 99px; background: var(--surface-2); overflow: hidden; position: relative; margin-top: 10px; }
+      .bar > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
+      .bar > i.ok-fill { background: var(--ok); }
+      .bar-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-top: 7px; font-weight: 500; }
+
+      /* ---------- Chips ---------- */
+      .chip {
+        display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700;
+        padding: 3px 9px; border-radius: 99px; white-space: nowrap;
+      }
+      .chip svg { width: 13px; height: 13px; }
+      .chip-pendiente { background: var(--warn-soft); color: var(--warn); }
+      .chip-realizado, .chip-hecho { background: var(--ok-soft); color: var(--ok); }
+      .chip-activa { background: var(--ok-soft); color: var(--ok); }
+      .chip-planeada { background: var(--info-soft); color: var(--info); }
+      .chip-pausada { background: var(--warn-soft); color: var(--warn); }
+      .chip-finalizada { background: var(--surface-2); color: var(--ink-2); }
+      .chip-mod { background: var(--brand-soft); color: var(--brand-ink); }
+      .chip-late { background: var(--bad-soft); color: var(--bad); }
+      .chip-tipo { background: var(--info-soft); color: var(--info); }
+
+      /* ---------- Listas ---------- */
+      .list { display: flex; flex-direction: column; gap: 10px; }
+      .row-card {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 15px 17px; box-shadow: var(--shadow);
+        display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap;
+      }
+      .row-card.late { border-color: var(--bad); background: var(--bad-soft); }
+      .row-card .grow { flex: 1; min-width: 200px; }
+      .row-card .t { font-weight: 700; font-size: 15.5px; font-family: "Poppins", sans-serif; }
+      .row-card .d { color: var(--ink-2); font-size: 13.5px; margin-top: 2px; white-space: pre-wrap; }
+      .row-card .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+      .row-card .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+      .icon-btn {
+        border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
+        border-radius: 8px; padding: 5px 9px; font-size: 12.5px; font-weight: 600;
+        display: inline-flex; align-items: center; gap: 5px;
+      }
+      .icon-btn:hover { border-color: var(--brand); }
+      .icon-btn svg { width: 14px; height: 14px; }
+      .icon-btn.ok-btn { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
+      .who { font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
+      .who svg { width: 14px; height: 14px; color: var(--ink-2); }
+      .date-txt { font-size: 12.5px; color: var(--ink-2); font-weight: 500; display: inline-flex; gap: 5px; align-items: center; }
+      .date-txt svg { width: 14px; height: 14px; }
+      .date-txt.late { color: var(--bad); font-weight: 700; }
+
+      /* ---------- Checklist de Inglés ---------- */
+      .check-row {
+        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
+        padding: 13px 15px; box-shadow: var(--shadow);
+        display: flex; gap: 12px; align-items: flex-start;
+      }
+      .check-box {
+        width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; margin-top: 1px;
+        border: 2px solid var(--line); background: var(--surface); color: transparent;
+        display: inline-flex; align-items: center; justify-content: center; padding: 0;
+      }
+      .check-box svg { width: 17px; height: 17px; }
+      .check-box:hover { border-color: var(--brand); }
+      .check-box.done { background: var(--ok); border-color: var(--ok); color: #fff; }
+      .check-row .grow { flex: 1; min-width: 0; }
+      .check-row .t { font-weight: 600; font-size: 15px; }
+      .check-row.done .t { text-decoration: line-through; color: var(--ink-2); }
+      .check-row .d { color: var(--ink-2); font-size: 13px; margin-top: 1px; white-space: pre-wrap; }
+      .check-row .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
+
+      /* ---------- Modal / formularios ---------- */
+      .overlay {
+        position: fixed; inset: 0; background: rgba(18,12,4,.55); z-index: 60;
+        display: none; align-items: flex-end; justify-content: center; padding: 0;
+      }
+      .overlay.open { display: flex; }
+      .modal {
+        background: var(--surface); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
+        border-radius: 18px 18px 0 0; padding: 22px 22px calc(22px + env(safe-area-inset-bottom));
+      }
+      @media (min-width: 700px) {
+        .overlay { align-items: center; padding: 20px; }
+        .modal { border-radius: 18px; }
+      }
+      .modal h2 { margin: 0 0 4px; font-size: 20px; }
+      .modal .hint { color: var(--ink-2); font-size: 13.5px; margin: 0 0 16px; }
+      .field { margin-bottom: 13px; }
+      .field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 5px; }
+      .field input, .field select, .field textarea {
+        width: 100%; border: 1.5px solid var(--line); background: var(--bg); border-radius: 10px;
+        padding: 10px 12px; font-size: 15px;
+      }
+      .field textarea { min-height: 74px; resize: vertical; }
+      .field input:focus, .field select:focus, .field textarea:focus { outline: 2px solid var(--brand); outline-offset: 0; border-color: var(--brand); }
+      .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media (max-width: 520px) { .field-row { grid-template-columns: 1fr; } }
+      .check-field { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 14.5px; padding: 6px 0; }
+      .check-field input { width: 20px; height: 20px; accent-color: var(--brand); }
+      .modal-actions { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+      .modal-actions .btn { flex: 1; justify-content: center; }
+      .form-error { background: var(--bad-soft); color: var(--bad); border-radius: 10px; padding: 10px 13px; font-size: 13.5px; font-weight: 600; margin-bottom: 13px; display: none; }
+      .form-error.show { display: block; }
+
+      /* ---------- Avisos ---------- */
+      .banner {
+        border-radius: 12px; padding: 13px 16px; font-weight: 600; font-size: 14px;
+        display: none; margin-bottom: 16px; align-items: flex-start; gap: 10px;
+      }
+      .banner.show { display: flex; }
+      .banner.err { background: var(--bad-soft); color: var(--bad); }
+      .banner.ok { background: var(--ok-soft); color: var(--ok); }
+      .banner svg { width: 18px; height: 18px; flex-shrink: 0; margin-top: 1px; }
+      .toast {
+        position: fixed; left: 50%; transform: translateX(-50%) translateY(20px);
+        bottom: calc(76px + env(safe-area-inset-bottom)); z-index: 80;
+        background: var(--ink); color: var(--bg); font-weight: 600; font-size: 14px;
+        padding: 11px 18px; border-radius: 99px; opacity: 0; pointer-events: none;
+        transition: opacity .25s, transform .25s; max-width: 92vw; text-align: center;
+        box-shadow: var(--shadow);
+      }
+      @media (min-width: 761px) { .toast { bottom: 26px; } }
+      .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+      .toast.err { background: var(--bad); color: #fff; }
+      .loading { text-align: center; padding: 60px 20px; color: var(--ink-2); }
+      .loading .spinner {
+        width: 38px; height: 38px; border-radius: 50%; margin: 0 auto 14px;
+        border: 4px solid var(--surface-2); border-top-color: var(--brand);
+        animation: spin .8s linear infinite;
+      }
+      .upcoming-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
+      .upcoming-item:last-child { border-bottom: 0; }
+      .date-badge {
+        background: var(--brand-soft); color: var(--brand-ink); border-radius: 10px;
+        min-width: 56px; text-align: center; padding: 6px 4px; flex-shrink: 0;
+      }
+      .date-badge b { display: block; font-family: "Poppins", sans-serif; font-size: 18px; line-height: 1; }
+      .date-badge span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+      .members { display: flex; gap: 8px; flex-wrap: wrap; }
+      .member-chip {
+        display: inline-flex; align-items: center; gap: 8px; background: var(--surface);
+        border: 1px solid var(--line); border-radius: 99px; padding: 5px 13px 5px 6px; font-weight: 600; font-size: 13.5px;
+      }
+      .avatar {
+        width: 28px; height: 28px; border-radius: 50%; background: var(--brand); color: #241300;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-family: "Poppins", sans-serif; font-weight: 700; font-size: 13px;
+      }
+      .avatar.alt { background: var(--yellow); }
+      @media (prefers-reduced-motion: reduce) {
+        * { animation: none !important; transition: none !important; }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="topbar-in">
+        <div class="wordmark">Kari<b>Space</b><span class="dot"></span></div>
+        <nav class="topnav" id="topnav" aria-label="Módulos"></nav>
+        <button class="refresh-btn" id="refreshBtn" type="button" title="Actualizar datos">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+          <span>Actualizar</span>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <div class="banner" id="banner" role="alert"></div>
+      <div id="view"><div class="loading"><div class="spinner"></div>Cargando el espacio del equipo…</div></div>
+    </main>
+
+    <nav class="dock" aria-label="Módulos">
+      <div class="dock-in" id="dock"></div>
+    </nav>
+
+    <div class="overlay" id="overlay">
+      <div class="modal" role="dialog" aria-modal="true" id="modalBox"></div>
+    </div>
+
+    <div class="toast" id="toast" role="status"></div>
+
+    <script>
+      "use strict";
+      /* ================= Conexión al backend (Supabase / PostgREST) ================= */
+      var SB_URL = "https://ihntkekeitxwalswgtys.supabase.co/rest/v1/";
+      var SB_KEY = "sb_publishable_F51Yn1v27IiG7vpZ0ZhDkA_0Hfnh_qM";
+
+      function api(path, options) {
+        options = options || {};
+        var headers = {
+          "apikey": SB_KEY,
+          "Authorization": "Bearer " + SB_KEY,
+          "Content-Type": "application/json"
+        };
+        if (options.headers) { for (var k in options.headers) headers[k] = options.headers[k]; }
+        return fetch(SB_URL + path, {
+          method: options.method || "GET",
+          headers: headers,
+          body: options.body ? JSON.stringify(options.body) : undefined
+        }).then(function (res) {
+          if (!res.ok) {
+            return res.text().then(function (txt) {
+              var msg = "Error " + res.status;
+              try { var j = JSON.parse(txt); if (j.message) msg = j.message; } catch (e) {}
+              throw new Error(msg);
+            });
+          }
+          if (res.status === 204) return null;
+          return res.text().then(function (t) { return t ? JSON.parse(t) : null; });
+        }).catch(function (err) {
+          if (err instanceof TypeError) throw new Error("Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.");
+          throw err;
+        });
+      }
+      function apiCreate(table, obj) {
+        return api(table, { method: "POST", headers: { "Prefer": "return=representation" }, body: obj });
+      }
+      function apiUpdate(table, id, obj) {
+        return api(table + "?id=eq." + encodeURIComponent(id), { method: "PATCH", headers: { "Prefer": "return=representation" }, body: obj });
+      }
+      function apiDelete(table, id) {
+        return api(table + "?id=eq." + encodeURIComponent(id), { method: "DELETE" });
+      }
+
+      /* ================= Estado ================= */
+      var state = {
+        miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [],
+        loaded: false
+      };
+      var currentModule = "home";
+
+      var MODULES = [
+        { id: "home", label: "Home", icon: "home" },
+        { id: "sorteos", label: "Sorteos", icon: "ticket" },
+        { id: "actividades", label: "Actividades", icon: "calendar" },
+        { id: "ingles", label: "Inglés", icon: "book" },
+        { id: "cuentas", label: "Cuentas claras", icon: "scale" }
+      ];
+      var DOCK_LABELS = { home: "Home", sorteos: "Sorteos", actividades: "Activ.", ingles: "Inglés", cuentas: "Cuentas" };
+      var ESTADOS_ACTIVIDAD = ["planeada", "activa", "pausada", "finalizada"];
+      var TIPOS_CUENTA = [
+        { id: "correo", label: "Correo", icon: "mail" },
+        { id: "reunion", label: "Reunión", icon: "users" },
+        { id: "llamada", label: "Llamada", icon: "phone" },
+        { id: "otro", label: "Otro", icon: "flag" }
+      ];
+
+      /* ================= Iconos (SVG de línea) ================= */
+      var ICONS = {
+        home: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9 21v-6h6v6"/>',
+        calendar: '<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4M16 3v4"/>',
+        users: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c.8-3.2 3.4-5 6.5-5s5.7 1.8 6.5 5"/><path d="M16 5a3.5 3.5 0 0 1 0 6.6M17.8 15.4c2 .6 3.3 2.2 3.7 4.6"/>',
+        ticket: '<path d="M3 9V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v2a2.5 2.5 0 0 0 0 5v2a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-2a2.5 2.5 0 0 0 0-5Z"/><path d="M13 5v2M13 11v2M13 17v2"/>',
+        book: '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V4a1 1 0 0 0-1-1H6.5A2.5 2.5 0 0 0 4 5.5Z"/><path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5"/>',
+        scale: '<path d="M12 3v18"/><path d="M5 21h14"/><path d="M12 6H5m7 0h7"/><path d="m5 6-2.5 6a3.5 3.5 0 0 0 5 0L5 6Z"/><path d="m19 6-2.5 6a3.5 3.5 0 0 0 5 0L19 6Z"/>',
+        mail: '<rect x="2" y="5" width="20" height="14" rx="2"/><path d="m2 7 10 6L22 7"/>',
+        phone: '<path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.13.96.36 1.9.7 2.8a2 2 0 0 1-.45 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.45c.9.34 1.84.57 2.8.7A2 2 0 0 1 22 16.9Z"/>',
+        flag: '<path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/>',
+        plus: '<path d="M12 5v14M5 12h14"/>',
+        pencil: '<path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/>',
+        trash: '<path d="M3 6h18"/><path d="M8 6V4h8v2"/><path d="M6 6l1 14a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-14"/><path d="M10 11v6M14 11v6"/>',
+        user: '<circle cx="12" cy="8" r="4"/><path d="M4 21c.9-4 4.2-6 8-6s7.1 2 8 6"/>',
+        clock: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/>',
+        alert: '<path d="M12 3 2 20h20Z"/><path d="M12 10v4M12 17.5v.5"/>',
+        check: '<path d="m4 12.5 5 5L20 6.5"/>',
+        undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
+        gift: '<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>'
+      };
+      function icon(name, cls) {
+        return '<svg class="' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || "") + "</svg>";
+      }
+
+      /* ================= Utilidades ================= */
+      function esc(s) {
+        if (s === null || s === undefined) return "";
+        return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+      }
+      function todayISO() {
+        var d = new Date();
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + m + "-" + day;
+      }
+      function addDaysISO(iso, n) {
+        var d = parseDate(iso);
+        if (!d) return iso;
+        d.setDate(d.getDate() + n);
+        var m = String(d.getMonth() + 1).padStart(2, "0");
+        var day = String(d.getDate()).padStart(2, "0");
+        return d.getFullYear() + "-" + m + "-" + day;
+      }
+      function parseDate(iso) {
+        if (!iso) return null;
+        var p = String(iso).slice(0, 10).split("-");
+        return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+      }
+      function fmtDate(iso) {
+        var d = parseDate(iso);
+        if (!d) return "—";
+        return d.toLocaleDateString("es-VE", { day: "numeric", month: "short", year: "numeric" });
+      }
+      function cap(s) { s = String(s || ""); return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " "); }
+      function tipoCuenta(id) {
+        for (var i = 0; i < TIPOS_CUENTA.length; i++) if (TIPOS_CUENTA[i].id === id) return TIPOS_CUENTA[i];
+        return TIPOS_CUENTA[3];
+      }
+      function cuentaVencida(c) {
+        return c.estado === "pendiente" && c.fecha_compromiso && c.fecha_compromiso < todayISO();
+      }
+      function toast(msg, isErr) {
+        var el = document.getElementById("toast");
+        el.textContent = msg;
+        el.className = "toast show" + (isErr ? " err" : "");
+        clearTimeout(toast._t);
+        toast._t = setTimeout(function () { el.className = "toast"; }, 3400);
+      }
+      function showBanner(type, msg) {
+        var b = document.getElementById("banner");
+        b.className = "banner show " + type;
+        b.innerHTML = icon(type === "err" ? "alert" : "check") + "<span>" + esc(msg) + "</span>";
+      }
+      function hideBanner() { document.getElementById("banner").className = "banner"; }
+
+      /* ================= Carga de datos ================= */
+      function loadAll(silent) {
+        var btn = document.getElementById("refreshBtn");
+        btn.classList.add("spinning");
+        return Promise.all([
+          api("miembros?select=*&order=nombre.asc"),
+          api("actividades?select=*&order=orden.asc,fecha_inicio.asc"),
+          api("sorteos?select=*&order=fecha.asc.nullslast,created_at.desc"),
+          api("ingles?select=*&order=orden.asc,created_at.asc"),
+          api("cuentas?select=*&order=fecha_compromiso.asc.nullslast,created_at.desc")
+        ]).then(function (r) {
+          state.miembros = r[0] || [];
+          state.actividades = r[1] || [];
+          state.sorteos = r[2] || [];
+          state.ingles = r[3] || [];
+          state.cuentas = r[4] || [];
+          state.loaded = true;
+          hideBanner();
+          render();
+        }).catch(function (err) {
+          showBanner("err", "No se pudieron cargar los datos: " + err.message + " Toca «Actualizar» para reintentar.");
+          if (!state.loaded) {
+            document.getElementById("view").innerHTML =
+              '<div class="loading"><p style="font-size:16px;font-weight:600;color:var(--ink)">No hay conexión con el backend.</p>' +
+              "<p>Revisa tu internet y toca el botón «Actualizar» de arriba.</p></div>";
+          }
+        }).finally(function () { btn.classList.remove("spinning"); });
+      }
+
+      /* ================= Navegación ================= */
+      function buildNav() {
+        var top = document.getElementById("topnav");
+        var dock = document.getElementById("dock");
+        top.innerHTML = MODULES.map(function (m) {
+          return '<button type="button" data-mod="' + m.id + '">' + icon(m.icon) + esc(m.label) + "</button>";
+        }).join("");
+        dock.innerHTML = MODULES.map(function (m) {
+          return '<button type="button" data-mod="' + m.id + '">' + icon(m.icon) + '<span class="dock-label">' + esc(DOCK_LABELS[m.id]) + "</span></button>";
+        }).join("");
+        [top, dock].forEach(function (nav) {
+          nav.addEventListener("click", function (e) {
+            var b = e.target.closest("button[data-mod]");
+            if (!b) return;
+            currentModule = b.getAttribute("data-mod");
+            render();
+            window.scrollTo({ top: 0 });
+          });
+        });
+        document.getElementById("refreshBtn").addEventListener("click", function () {
+          loadAll().then(function () { if (state.loaded) toast("Datos actualizados"); });
+        });
+      }
+      function markNav() {
+        document.querySelectorAll("[data-mod]").forEach(function (b) {
+          b.classList.toggle("active", b.getAttribute("data-mod") === currentModule);
+        });
+      }
+      function goModule(id) { currentModule = id; render(); window.scrollTo({ top: 0 }); }
+      function render() {
+        markNav();
+        var v = document.getElementById("view");
+        if (currentModule === "home") v.innerHTML = viewHome();
+        else if (currentModule === "sorteos") v.innerHTML = viewSorteos();
+        else if (currentModule === "actividades") v.innerHTML = viewActividades();
+        else if (currentModule === "ingles") v.innerHTML = viewIngles();
+        else if (currentModule === "cuentas") v.innerHTML = viewCuentas();
+      }
+      function modHead(title, sub, btnHtml) {
+        return '<div class="mod-head"><div><h1>' + esc(title) + "</h1><p>" + esc(sub) + '</p></div><div class="spacer"></div>' + (btnHtml || "") + "</div>";
+      }
+      function newBtn(label, onclick) {
+        return '<button type="button" class="btn btn-primary" onclick="' + onclick + '">' + icon("plus") + esc(label) + "</button>";
+      }
+      function dateBadge(iso) {
+        var d = parseDate(iso);
+        return '<div class="date-badge"><b>' + (d ? d.getDate() : "—") + "</b><span>" + (d ? d.toLocaleDateString("es-VE", { month: "short" }).replace(".", "") : "") + "</span></div>";
+      }
+
+      /* ================= Vista: Home ================= */
+      function viewHome() {
+        var t = todayISO();
+        var semanaFin = addDaysISO(t, 7);
+        var sortPend = state.sorteos.filter(function (s) { return s.estado === "pendiente"; });
+        var sortProx = sortPend.filter(function (s) { return s.fecha; }).sort(function (a, b) { return String(a.fecha).localeCompare(String(b.fecha)); })[0];
+        var actActivas = state.actividades.filter(function (a) { return a.estado === "activa"; });
+        var actProximas = state.actividades.filter(function (a) {
+          return a.estado !== "finalizada" && a.fecha_inicio && a.fecha_inicio >= t;
+        }).sort(function (a, b) { return String(a.fecha_inicio).localeCompare(String(b.fecha_inicio)); });
+        var ingTotal = state.ingles.length;
+        var ingDone = state.ingles.filter(function (i) { return i.completado; }).length;
+        var ingFaltan = ingTotal - ingDone;
+        var ingPct = ingTotal ? Math.round((ingDone / ingTotal) * 100) : 0;
+        var cuePend = state.cuentas.filter(function (c) { return c.estado === "pendiente"; });
+        var cueVenc = cuePend.filter(cuentaVencida);
+        var cueSemana = cuePend.filter(function (c) { return c.fecha_compromiso && c.fecha_compromiso >= t && c.fecha_compromiso <= semanaFin; });
+
+        var h = modHead("¿Cómo vamos?", "La vista rápida del equipo: sorteos por realizar, actividades en marcha, el avance en inglés y lo pendiente con proveedores.");
+        h += '<div class="grid-cards">';
+        /* Sorteos */
+        h += '<section class="card"><h3>' + icon("ticket") + 'Sorteos</h3>' +
+          '<div class="big-num">' + sortPend.length + '</div>' +
+          '<div class="sub">' + (sortPend.length === 1 ? "sorteo pendiente por realizar" : "sorteos pendientes por realizar") + "</div>" +
+          (sortProx
+            ? '<p class="sub" style="margin-top:10px">Próximo: <strong style="color:var(--ink)">' + esc(sortProx.nombre) + "</strong> · " + esc(fmtDate(sortProx.fecha)) + "</p>"
+            : '<p class="sub" style="margin-top:10px">Sin sorteos con fecha programada.</p>') +
+          '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'sorteos\')">Ver sorteos</button></p></section>';
+        /* Actividades */
+        h += '<section class="card"><h3>' + icon("calendar") + 'Actividades</h3>' +
+          '<div class="stat-row"><div class="st"><b>' + actActivas.length + '</b><span>Activas</span></div>' +
+          '<div class="st"><b>' + actProximas.length + '</b><span>Próximas</span></div></div>' +
+          (actProximas.length
+            ? '<p class="sub" style="margin-top:10px">La más cercana: <strong style="color:var(--ink)">' + esc(actProximas[0].nombre) + "</strong> · " + esc(fmtDate(actProximas[0].fecha_inicio)) + "</p>"
+            : '<p class="sub" style="margin-top:10px">No hay actividades próximas registradas.</p>') +
+          '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'actividades\')">Ver actividades</button></p></section>';
+        /* Inglés */
+        h += '<section class="card"><h3>' + icon("book") + 'Inglés del equipo</h3>' +
+          '<div class="big-num">' + ingPct + '%</div>' +
+          '<div class="sub">del plan completado · ' + ingDone + " de " + ingTotal + " ítems listos, faltan " + ingFaltan + "</div>" +
+          '<div class="bar"><i class="ok-fill" style="width:' + ingPct + '%"></i></div>' +
+          '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'ingles\')">Ver el plan de inglés</button></p></section>';
+        /* Cuentas claras */
+        h += '<section class="card"><h3>' + icon("scale") + 'Cuentas claras</h3>' +
+          '<div class="stat-row"><div class="st"><b>' + cuePend.length + '</b><span>Pendientes</span></div>' +
+          '<div class="st"><b style="color:var(--bad)">' + cueVenc.length + '</b><span>Vencidas</span></div>' +
+          '<div class="st"><b>' + cueSemana.length + '</b><span>Esta semana</span></div></div>' +
+          (cueVenc.length
+            ? '<p class="sub" style="margin-top:10px;color:var(--bad);font-weight:600">Ojo: hay ' + cueVenc.length + (cueVenc.length === 1 ? " pendiente vencido" : " pendientes vencidos") + " con proveedores.</p>"
+            : '<p class="sub" style="margin-top:10px">Nada vencido con proveedores. ¡Bien!</p>') +
+          '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'cuentas\')">Ver cuentas claras</button></p></section>';
+        h += "</div>";
+
+        /* Equipo */
+        h += '<h2 class="section-title">' + icon("users") + 'Equipo</h2><div class="card"><div class="members">' +
+          state.miembros.filter(function (m) { return m.activo; }).map(function (m, i) {
+            return '<span class="member-chip"><span class="avatar' + (i % 2 ? " alt" : "") + '">' + esc(String(m.nombre || "?").charAt(0).toUpperCase()) + "</span>" + esc(m.nombre) + (m.rol === "admin" ? ' <span class="chip chip-mod">Admin</span>' : "") + "</span>";
+          }).join("") + "</div>" +
+          '<p class="sub" style="margin-top:10px">Cada integrante ve y actualiza la misma información.</p></div>';
+
+        /* Vencidas con proveedores */
+        if (cueVenc.length) {
+          h += '<h2 class="section-title bad">' + icon("alert") + 'Pendientes vencidos con proveedores</h2><div class="list">' +
+            cueVenc.map(function (c) {
+              var tp = tipoCuenta(c.tipo);
+              return '<div class="row-card late"><div class="grow"><div class="t">' + esc(c.proveedor) + '</div>' +
+                '<div class="d">' + esc(c.pendiente) + '</div><div class="meta">' +
+                '<span class="chip chip-tipo">' + icon(tp.icon) + esc(tp.label) + "</span>" +
+                '<span class="chip chip-late">Venció el ' + esc(fmtDate(c.fecha_compromiso)) + "</span></div></div>" +
+                '<button type="button" class="icon-btn ok-btn" onclick="setCuentaEstado(\'' + c.id + "',\'hecho\')\">" + icon("check") + "Marcar hecho</button></div>";
+            }).join("") + "</div>";
+        }
+
+        /* Lo que viene */
+        var viene = [];
+        actProximas.forEach(function (a) { viene.push({ fecha: a.fecha_inicio, titulo: a.nombre, detalle: "Actividad · " + cap(a.estado), badge: dateBadge(a.fecha_inicio) }); });
+        sortPend.forEach(function (s) { if (s.fecha && s.fecha >= t) viene.push({ fecha: s.fecha, titulo: s.nombre, detalle: "Sorteo pendiente" + (s.responsable ? " · " + s.responsable : ""), badge: dateBadge(s.fecha) }); });
+        cueSemana.forEach(function (c) { viene.push({ fecha: c.fecha_compromiso, titulo: c.proveedor + " — " + c.pendiente, detalle: "Cuentas claras · " + tipoCuenta(c.tipo).label, badge: dateBadge(c.fecha_compromiso) }); });
+        viene.sort(function (a, b) { return String(a.fecha).localeCompare(String(b.fecha)); });
+        h += '<h2 class="section-title">' + icon("calendar") + "Lo que viene</h2>";
+        if (!viene.length) {
+          h += '<div class="card"><p class="sub" style="margin:0">Nada próximo en el calendario. Cuando registren actividades, sorteos o compromisos con fecha, aparecen aquí.</p></div>';
+        } else {
+          h += '<div class="card">' + viene.slice(0, 6).map(function (x) {
+            return '<div class="upcoming-item">' + x.badge +
+              '<div style="flex:1;min-width:0"><div style="font-weight:700">' + esc(x.titulo) + '</div><div class="sub">' + esc(fmtDate(x.fecha)) + " · " + esc(x.detalle) + "</div></div></div>";
+          }).join("") + "</div>";
+        }
+        return h;
+      }
+
+      /* ================= Vista: Sorteos ================= */
+      function viewSorteos() {
+        var h = modHead("Sorteos", "Los sorteos que el equipo tiene pendientes por realizar y el registro de los ya hechos.", newBtn("Nuevo sorteo", "openSorteoForm()"));
+        if (!state.sorteos.length) {
+          h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay sorteos registrados. Crea el primero con el botón «Nuevo sorteo».</p></div>';
+          return h;
+        }
+        var pend = state.sorteos.filter(function (s) { return s.estado === "pendiente"; })
+          .sort(function (a, b) { return String(a.fecha || "9999").localeCompare(String(b.fecha || "9999")); });
+        var hechos = state.sorteos.filter(function (s) { return s.estado === "realizado"; })
+          .sort(function (a, b) { return String(b.fecha || "").localeCompare(String(a.fecha || "")); });
+        function sorteoCard(s) {
+          var realizado = s.estado === "realizado";
+          return '<div class="row-card">' + (s.fecha ? dateBadge(s.fecha) : "") +
+            '<div class="grow"><div class="t">' + esc(s.nombre) + "</div>" +
+            (s.descripcion ? '<div class="d">' + esc(s.descripcion) + "</div>" : "") +
+            '<div class="meta"><span class="chip chip-' + esc(s.estado) + '">' + (realizado ? "Realizado" : "Pendiente") + "</span>" +
+            (s.fecha ? '<span class="date-txt">' + icon("calendar") + esc(fmtDate(s.fecha)) + "</span>" : '<span class="date-txt">Sin fecha</span>') +
+            (s.responsable ? '<span class="who">' + icon("user") + esc(s.responsable) + "</span>" : "") + "</div>" +
+            (s.notas ? '<div class="d" style="margin-top:6px">' + esc(s.notas) + "</div>" : "") + "</div>" +
+            '<div class="actions">' +
+            (realizado
+              ? '<button type="button" class="icon-btn" onclick="setSorteoEstado(\'' + s.id + "',\'pendiente\')\">" + icon("undo") + "Volver a pendiente</button>"
+              : '<button type="button" class="icon-btn ok-btn" onclick="setSorteoEstado(\'' + s.id + "',\'realizado\')\">" + icon("check") + "Marcar realizado</button>") +
+            '<button type="button" class="icon-btn" onclick="openSorteoForm(\'' + s.id + "')\">" + icon("pencil") + "Editar</button></div></div>";
+        }
+        if (pend.length) h += '<h2 class="section-title" style="margin-top:4px">' + icon("ticket") + "Pendientes (" + pend.length + ')</h2><div class="list">' + pend.map(sorteoCard).join("") + "</div>";
+        if (hechos.length) h += '<h2 class="section-title">' + icon("gift") + "Realizados (" + hechos.length + ')</h2><div class="list">' + hechos.map(sorteoCard).join("") + "</div>";
+        if (!pend.length && !hechos.length) h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay sorteos registrados.</p></div>';
+        return h;
+      }
+      function setSorteoEstado(id, estado) {
+        apiUpdate("sorteos", id, { estado: estado })
+          .then(function () { toast(estado === "realizado" ? "Sorteo marcado como realizado" : "Sorteo de vuelta a pendientes"); return loadAll(true); })
+          .catch(function (err) { toast("No se pudo actualizar: " + err.message, true); });
+      }
+
+      /* ================= Vista: Actividades ================= */
+      function viewActividades() {
+        var h = modHead("Actividades", "Las actividades y campañas del equipo, con sus fechas y estado.", newBtn("Nueva actividad", "openActividadForm()"));
+        if (!state.actividades.length) { h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay actividades. Crea la primera con el botón de arriba.</p></div>'; return h; }
+        h += '<div class="list">' + state.actividades.map(function (a) {
+          return '<div class="row-card">' + (a.fecha_inicio ? dateBadge(a.fecha_inicio) : "") +
+            '<div class="grow"><div class="t">' + esc(a.nombre) + "</div>" +
+            (a.descripcion ? '<div class="d">' + esc(a.descripcion) + "</div>" : "") +
+            '<div class="meta"><span class="date-txt">' + icon("calendar") + esc(fmtDate(a.fecha_inicio)) + (a.fecha_fin ? " → " + esc(fmtDate(a.fecha_fin)) : " · sin fecha de cierre") + '</span>' +
+            '<span class="chip chip-' + esc(a.estado) + '">' + esc(cap(a.estado)) + "</span></div></div>" +
+            '<button type="button" class="icon-btn" onclick="openActividadForm(\'' + a.id + "')\">" + icon("pencil") + "Editar</button></div>";
+        }).join("") + "</div>";
+        return h;
+      }
+
+      /* ================= Vista: Inglés ================= */
+      function viewIngles() {
+        var total = state.ingles.length;
+        var done = state.ingles.filter(function (i) { return i.completado; }).length;
+        var pct = total ? Math.round((done / total) * 100) : 0;
+        var h = modHead("Módulo de Inglés", "El plan del equipo para aprender inglés: cada quien marca lo que ya hizo y el avance se ve al instante.", newBtn("Agregar ítem", "openInglesForm()"));
+        h += '<section class="card" style="margin-bottom:16px"><h3>' + icon("book") + "Avance del equipo</h3>" +
+          '<div class="stat-row"><div class="st"><b>' + pct + '%</b><span>Completado</span></div>' +
+          '<div class="st"><b>' + done + '</b><span>Hechos</span></div>' +
+          '<div class="st"><b>' + (total - done) + '</b><span>Por hacer</span></div></div>' +
+          '<div class="bar" style="height:16px"><i class="ok-fill" style="width:' + pct + '%"></i></div>' +
+          '<div class="bar-legend"><span>' + done + " de " + total + " ítems completados</span></div></section>";
+        if (!total) {
+          h += '<div class="card"><p class="sub" style="margin:0">El checklist está vacío. Agrega el primer ítem del plan con el botón «Agregar ítem»: una lección, una práctica, un video por ver…</p></div>';
+          return h;
+        }
+        var pend = state.ingles.filter(function (i) { return !i.completado; });
+        var hechos = state.ingles.filter(function (i) { return i.completado; });
+        function ingRow(it) {
+          return '<div class="check-row' + (it.completado ? " done" : "") + '">' +
+            '<button type="button" class="check-box' + (it.completado ? " done" : "") + '" onclick="toggleIngles(\'' + it.id + "')\" aria-label=\"" + (it.completado ? "Marcar como pendiente" : "Marcar como hecho") + '" title="' + (it.completado ? "Marcar como pendiente" : "Marcar como hecho") + '">' + icon("check") + "</button>" +
+            '<div class="grow"><div class="t">' + esc(it.titulo) + "</div>" +
+            (it.detalle ? '<div class="d">' + esc(it.detalle) + "</div>" : "") +
+            '<div class="meta">' +
+            (it.responsable ? '<span class="who">' + icon("user") + esc(it.responsable) + "</span>" : "") +
+            (it.fecha ? '<span class="date-txt">' + icon("clock") + "Meta: " + esc(fmtDate(it.fecha)) + "</span>" : "") +
+            "</div></div>" +
+            '<button type="button" class="icon-btn" onclick="openInglesForm(\'' + it.id + "')\">" + icon("pencil") + "Editar</button></div>";
+        }
+        if (pend.length) h += '<h2 class="section-title" style="margin-top:4px">' + icon("clock") + "Por hacer (" + pend.length + ')</h2><div class="list">' + pend.map(ingRow).join("") + "</div>";
+        if (hechos.length) h += '<h2 class="section-title">' + icon("check") + "Hechos (" + hechos.length + ')</h2><div class="list">' + hechos.map(ingRow).join("") + "</div>";
+        return h;
+      }
+      function toggleIngles(id) {
+        var it = state.ingles.find(function (x) { return x.id === id; });
+        if (!it) return;
+        apiUpdate("ingles", id, { completado: !it.completado })
+          .then(function () { toast(it.completado ? "Ítem de vuelta a pendientes" : "¡Ítem completado!"); return loadAll(true); })
+          .catch(function (err) { toast("No se pudo actualizar: " + err.message, true); });
+      }
+
+      /* ================= Vista: Cuentas claras ================= */
+      function viewCuentas() {
+        var pend = state.cuentas.filter(function (c) { return c.estado === "pendiente"; })
+          .sort(function (a, b) { return String(a.fecha_compromiso || "9999").localeCompare(String(b.fecha_compromiso || "9999")); });
+        var venc = pend.filter(cuentaVencida);
+        var hechas = state.cuentas.filter(function (c) { return c.estado === "hecho"; })
+          .sort(function (a, b) { return String(b.fecha_compromiso || "").localeCompare(String(a.fecha_compromiso || "")); });
+        var h = modHead("Cuentas claras", "Todo lo pendiente con proveedores en un solo lugar: correos por enviar, reuniones y llamadas, con su fecha compromiso.", newBtn("Nuevo pendiente", "openCuentaForm()"));
+        h += '<div class="grid-cards" style="margin-bottom:4px">' +
+          '<section class="card"><h3>' + icon("scale") + 'Pendientes</h3><div class="big-num">' + pend.length + '</div><div class="sub">compromisos abiertos con proveedores</div></section>' +
+          '<section class="card"><h3>' + icon("alert") + 'Vencidos</h3><div class="big-num' + (venc.length ? " bad" : "") + '">' + venc.length + '</div><div class="sub">pasó la fecha compromiso y siguen pendientes</div></section>' +
+          '<section class="card"><h3>' + icon("check") + 'Hechos</h3><div class="big-num">' + hechas.length + '</div><div class="sub">compromisos ya resueltos</div></section></div>';
+        function cuentaCard(c) {
+          var tp = tipoCuenta(c.tipo);
+          var v = cuentaVencida(c);
+          var hecho = c.estado === "hecho";
+          return '<div class="row-card' + (v ? " late" : "") + '"><div class="grow"><div class="t">' + esc(c.proveedor) + "</div>" +
+            '<div class="d">' + esc(c.pendiente) + "</div>" +
+            '<div class="meta"><span class="chip chip-tipo">' + icon(tp.icon) + esc(tp.label) + "</span>" +
+            '<span class="chip chip-' + esc(c.estado) + '">' + (hecho ? "Hecho" : "Pendiente") + "</span>" +
+            (c.fecha_compromiso
+              ? '<span class="date-txt' + (v ? " late" : "") + '">' + icon("calendar") + (v ? "Venció el " : "Compromiso: ") + esc(fmtDate(c.fecha_compromiso)) + "</span>"
+              : '<span class="date-txt">Sin fecha compromiso</span>') + "</div>" +
+            (c.notas ? '<div class="d" style="margin-top:6px">' + esc(c.notas) + "</div>" : "") + "</div>" +
+            '<div class="actions">' +
+            (hecho
+              ? '<button type="button" class="icon-btn" onclick="setCuentaEstado(\'' + c.id + "',\'pendiente\')\">" + icon("undo") + "Reabrir</button>"
+              : '<button type="button" class="icon-btn ok-btn" onclick="setCuentaEstado(\'' + c.id + "',\'hecho\')\">" + icon("check") + "Marcar hecho</button>") +
+            '<button type="button" class="icon-btn" onclick="openCuentaForm(\'' + c.id + "')\">" + icon("pencil") + "Editar</button></div></div>";
+        }
+        if (pend.length) h += '<h2 class="section-title">' + icon("clock") + "Pendientes (" + pend.length + ')</h2><div class="list">' + pend.map(cuentaCard).join("") + "</div>";
+        else h += '<div class="card" style="margin-top:16px"><p class="sub" style="margin:0">No hay pendientes con proveedores. Cuando surja un correo, una reunión o una llamada por hacer, regístralo con «Nuevo pendiente».</p></div>';
+        if (hechas.length) h += '<h2 class="section-title">' + icon("check") + "Hechos (" + hechas.length + ')</h2><div class="list">' + hechas.map(cuentaCard).join("") + "</div>";
+        return h;
+      }
+      function setCuentaEstado(id, estado) {
+        apiUpdate("cuentas", id, { estado: estado })
+          .then(function () { toast(estado === "hecho" ? "Pendiente marcado como hecho" : "Pendiente reabierto"); return loadAll(true); })
+          .catch(function (err) { toast("No se pudo actualizar: " + err.message, true); });
+      }
+
+      /* ================= Modal genérico ================= */
+      var overlay = document.getElementById("overlay");
+      var modalBox = document.getElementById("modalBox");
+      function openModal(html) { modalBox.innerHTML = html; overlay.classList.add("open"); }
+      function closeModal() { overlay.classList.remove("open"); modalBox.innerHTML = ""; }
+      overlay.addEventListener("click", function (e) { if (e.target === overlay) closeModal(); });
+      document.addEventListener("keydown", function (e) { if (e.key === "Escape") closeModal(); });
+
+      function fieldHtml(f, val) {
+        var v = val === null || val === undefined ? "" : val;
+        if (f.type === "textarea") {
+          return '<div class="field"><label for="ff_' + f.name + '">' + esc(f.label) + '</label><textarea id="ff_' + f.name + '" placeholder="' + esc(f.ph || "") + '">' + esc(v) + "</textarea></div>";
+        }
+        if (f.type === "select") {
+          var opts = f.options.map(function (o) {
+            var ov = typeof o === "string" ? o : o.value, ol = typeof o === "string" ? o : o.label;
+            return '<option value="' + esc(ov) + '"' + (String(v) === String(ov) ? " selected" : "") + ">" + esc(ol) + "</option>";
+          }).join("");
+          return '<div class="field"><label for="ff_' + f.name + '">' + esc(f.label) + '</label><select id="ff_' + f.name + '">' + opts + "</select></div>";
+        }
+        if (f.type === "checkbox") {
+          return '<div class="field"><label class="check-field"><input type="checkbox" id="ff_' + f.name + '"' + (v ? " checked" : "") + " /> " + esc(f.label) + "</label></div>";
+        }
+        var list = f.datalist ? ' list="dl_' + f.name + '"' : "";
+        var dl = f.datalist ? '<datalist id="dl_' + f.name + '">' + f.datalist.map(function (o) { return '<option value="' + esc(o) + '">'; }).join("") + "</datalist>" : "";
+        return '<div class="field"><label for="ff_' + f.name + '">' + esc(f.label) + '</label><input id="ff_' + f.name + '" type="' + f.type + '" value="' + esc(v) + '" placeholder="' + esc(f.ph || "") + '"' + list + " />" + dl + "</div>";
+      }
+      function showForm(cfg) {
+        var rows = "", i;
+        for (i = 0; i < cfg.fields.length; i++) {
+          var f = cfg.fields[i];
+          if (f.half && cfg.fields[i + 1] && cfg.fields[i + 1].half) {
+            rows += '<div class="field-row">' + fieldHtml(f, cfg.values[f.name]) + fieldHtml(cfg.fields[i + 1], cfg.values[cfg.fields[i + 1].name]) + "</div>";
+            i++;
+          } else rows += fieldHtml(f, cfg.values[f.name]);
+        }
+        openModal(
+          "<h2>" + esc(cfg.title) + "</h2>" + (cfg.hint ? '<p class="hint">' + esc(cfg.hint) + "</p>" : "") +
+          '<div class="form-error" id="formError"></div><form id="modalForm">' + rows +
+          '<div class="modal-actions">' +
+          (cfg.onDelete ? '<button type="button" class="btn btn-danger" id="btnDelete">' + icon("trash") + "Eliminar</button>" : "") +
+          '<button type="button" class="btn btn-ghost" id="btnCancel">Cancelar</button>' +
+          '<button type="submit" class="btn btn-primary" id="btnSave">Guardar</button>' +
+          "</div></form>"
+        );
+        document.getElementById("btnCancel").addEventListener("click", closeModal);
+        if (cfg.onDelete) {
+          document.getElementById("btnDelete").addEventListener("click", function () {
+            confirmDelete(cfg.title, function () {
+              setBusy(true);
+              cfg.onDelete().then(function () { closeModal(); toast("Eliminado"); return loadAll(true); })
+                .catch(function (err) { setBusy(false); formError(err.message); });
+            });
+          });
+        }
+        document.getElementById("modalForm").addEventListener("submit", function (e) {
+          e.preventDefault();
+          var values = {};
+          cfg.fields.forEach(function (f) {
+            var el = document.getElementById("ff_" + f.name);
+            if (!el) return;
+            if (f.type === "checkbox") values[f.name] = el.checked;
+            else values[f.name] = el.value.trim() === "" ? null : el.value.trim();
+          });
+          setBusy(true);
+          cfg.onSubmit(values).then(function () { closeModal(); toast("Guardado"); return loadAll(true); })
+            .catch(function (err) { setBusy(false); formError(err.message); });
+        });
+        var first = modalBox.querySelector("input, select, textarea");
+        if (first) setTimeout(function () { first.focus(); }, 60);
+      }
+      function setBusy(b) {
+        var s = document.getElementById("btnSave");
+        if (s) { s.disabled = b; s.textContent = b ? "Guardando…" : "Guardar"; }
+      }
+      function formError(msg) {
+        var el = document.getElementById("formError");
+        if (el) { el.textContent = "No se pudo guardar: " + msg; el.classList.add("show"); }
+      }
+      function confirmDelete(title, onYes) {
+        openModal("<h2>¿Eliminar?</h2><p class=\"hint\">Se eliminará «" + esc(title) + "» del espacio del equipo. Esta acción no se puede deshacer.</p>" +
+          '<div class="modal-actions"><button type="button" class="btn btn-ghost" id="cdNo">Cancelar</button>' +
+          '<button type="button" class="btn btn-danger" id="cdYes">' + icon("trash") + "Sí, eliminar</button></div>");
+        document.getElementById("cdNo").addEventListener("click", closeModal);
+        document.getElementById("cdYes").addEventListener("click", function () { onYes(); });
+      }
+
+      /* ================= Formularios por entidad ================= */
+      function miembrosNombres() { return state.miembros.filter(function (m) { return m.activo; }).map(function (m) { return m.nombre; }); }
+      function responsableOptions(actual) {
+        var opts = [""].concat(miembrosNombres());
+        if (actual && opts.indexOf(actual) === -1) opts.push(actual);
+        return opts.map(function (o) { return { value: o, label: o === "" ? "Sin asignar" : o }; });
+      }
+
+      function openSorteoForm(id) {
+        var s = id ? state.sorteos.find(function (x) { return x.id === id; }) : null;
+        showForm({
+          title: s ? "Editar sorteo" : "Nuevo sorteo",
+          hint: "Registra el sorteo y, cuando se realice, márcalo como realizado desde la lista.",
+          values: s || { estado: "pendiente", fecha: todayISO() },
+          fields: [
+            { name: "nombre", label: "Nombre del sorteo *", type: "text", ph: "Ej.: Sorteo de aniversario La Mata" },
+            { name: "descripcion", label: "Descripción", type: "textarea", ph: "Premio, mecánica, patrocinante… (opcional)" },
+            { name: "fecha", label: "Fecha del sorteo", type: "date", half: true },
+            { name: "estado", label: "Estado", type: "select", half: true, options: [{ value: "pendiente", label: "Pendiente" }, { value: "realizado", label: "Realizado" }] },
+            { name: "responsable", label: "Responsable", type: "select", options: responsableOptions(s ? s.responsable : "") },
+            { name: "notas", label: "Notas", type: "textarea", ph: "Pendientes previos, acuerdos… (opcional)" }
+          ],
+          onSubmit: function (v) {
+            if (!v.nombre) return Promise.reject(new Error("El sorteo necesita un nombre."));
+            var payload = { nombre: v.nombre, descripcion: v.descripcion, fecha: v.fecha, estado: v.estado || "pendiente", responsable: v.responsable, notas: v.notas };
+            return s ? apiUpdate("sorteos", s.id, payload) : apiCreate("sorteos", payload);
+          },
+          onDelete: s ? function () { return apiDelete("sorteos", s.id); } : null
+        });
+      }
+
+      function openActividadForm(id) {
+        var a = id ? state.actividades.find(function (x) { return x.id === id; }) : null;
+        showForm({
+          title: a ? "Editar actividad" : "Nueva actividad",
+          values: a || { estado: "planeada", fecha_inicio: todayISO() },
+          fields: [
+            { name: "nombre", label: "Nombre *", type: "text", ph: "Ej.: Ruta de la Hallaca Kari" },
+            { name: "descripcion", label: "Descripción", type: "textarea", ph: "Notas de la actividad (opcional)" },
+            { name: "fecha_inicio", label: "Fecha de inicio", type: "date", half: true },
+            { name: "fecha_fin", label: "Fecha de fin", type: "date", half: true },
+            { name: "estado", label: "Estado", type: "select", options: ESTADOS_ACTIVIDAD.map(function (e) { return { value: e, label: cap(e) }; }) }
+          ],
+          onSubmit: function (v) {
+            if (!v.nombre) return Promise.reject(new Error("La actividad necesita un nombre."));
+            var payload = { nombre: v.nombre, descripcion: v.descripcion, fecha_inicio: v.fecha_inicio, fecha_fin: v.fecha_fin, estado: v.estado || "planeada" };
+            if (!a) payload.orden = state.actividades.length + 1;
+            return a ? apiUpdate("actividades", a.id, payload) : apiCreate("actividades", payload);
+          },
+          onDelete: a ? function () { return apiDelete("actividades", a.id); } : null
+        });
+      }
+
+      function openInglesForm(id) {
+        var it = id ? state.ingles.find(function (x) { return x.id === id; }) : null;
+        showForm({
+          title: it ? "Editar ítem de inglés" : "Nuevo ítem de inglés",
+          hint: "Un ítem puede ser una lección, una práctica de conversación, un video por ver o un tema por estudiar.",
+          values: it || { completado: false },
+          fields: [
+            { name: "titulo", label: "Ítem *", type: "text", ph: "Ej.: Ver la lección 3 de verbos en pasado" },
+            { name: "detalle", label: "Detalle", type: "textarea", ph: "Enlace, recurso o nota para el equipo (opcional)" },
+            { name: "responsable", label: "Responsable", type: "select", half: true, options: responsableOptions(it ? it.responsable : "") },
+            { name: "fecha", label: "Fecha meta", type: "date", half: true },
+            { name: "completado", label: "Ya está hecho", type: "checkbox" }
+          ],
+          onSubmit: function (v) {
+            if (!v.titulo) return Promise.reject(new Error("El ítem necesita un título."));
+            var payload = { titulo: v.titulo, detalle: v.detalle, responsable: v.responsable, fecha: v.fecha, completado: !!v.completado };
+            if (!it) payload.orden = state.ingles.length + 1;
+            return it ? apiUpdate("ingles", it.id, payload) : apiCreate("ingles", payload);
+          },
+          onDelete: it ? function () { return apiDelete("ingles", it.id); } : null
+        });
+      }
+
+      function openCuentaForm(id) {
+        var c = id ? state.cuentas.find(function (x) { return x.id === id; }) : null;
+        var proveedores = [];
+        state.cuentas.forEach(function (x) { if (x.proveedor && proveedores.indexOf(x.proveedor) === -1) proveedores.push(x.proveedor); });
+        showForm({
+          title: c ? "Editar pendiente" : "Nuevo pendiente con proveedor",
+          hint: "Ejemplo: «Enviar el correo con la propuesta» o «Reunión para revisar el contrato», con su fecha compromiso.",
+          values: c || { tipo: "correo", estado: "pendiente", fecha_compromiso: todayISO() },
+          fields: [
+            { name: "proveedor", label: "Proveedor *", type: "text", ph: "Ej.: Nombre del proveedor o empresa", datalist: proveedores },
+            { name: "pendiente", label: "¿Qué está pendiente? *", type: "text", ph: "Ej.: Enviar correo con la cotización" },
+            { name: "tipo", label: "Tipo", type: "select", half: true, options: TIPOS_CUENTA.map(function (tp) { return { value: tp.id, label: tp.label }; }) },
+            { name: "estado", label: "Estado", type: "select", half: true, options: [{ value: "pendiente", label: "Pendiente" }, { value: "hecho", label: "Hecho" }] },
+            { name: "fecha_compromiso", label: "Fecha compromiso", type: "date" },
+            { name: "notas", label: "Notas", type: "textarea", ph: "Contacto, acuerdos, contexto… (opcional)" }
+          ],
+          onSubmit: function (v) {
+            if (!v.proveedor) return Promise.reject(new Error("Indica el proveedor."));
+            if (!v.pendiente) return Promise.reject(new Error("Describe qué está pendiente."));
+            var payload = { proveedor: v.proveedor, pendiente: v.pendiente, tipo: v.tipo || "otro", fecha_compromiso: v.fecha_compromiso, estado: v.estado || "pendiente", notas: v.notas };
+            return c ? apiUpdate("cuentas", c.id, payload) : apiCreate("cuentas", payload);
+          },
+          onDelete: c ? function () { return apiDelete("cuentas", c.id); } : null
+        });
+      }
+
+      /* ================= Arranque ================= */
+      buildNav();
+      markNav();
+      loadAll();
+    </script>
+  </body>
+</html>
