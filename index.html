@@ -212,6 +212,16 @@
       .meta-faltan.done { background: var(--ok-soft); color: var(--ok); }
       .meta-mini-bar { height: 10px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
       .meta-mini-bar > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
+
+      /* ---------- Lista estructurada de aportes ---------- */
+      .aportes { flex: 1 1 100%; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 11px; }
+      .aportes-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin-bottom: 4px; }
+      .aporte-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 7px 0; border-bottom: 1px dashed var(--line); }
+      .aporte-row .ap-name { flex: 1; min-width: 170px; font-weight: 600; font-size: 14px; }
+      .aporte-row .ap-monto { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 15px; white-space: nowrap; }
+      .chip-especie { background: var(--info-soft); color: var(--info); }
+      .aportes-total { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 9px; font-weight: 700; font-size: 14.5px; }
+      .aportes-total .ap-total-monto { font-family: "Poppins", sans-serif; font-size: 16px; color: var(--brand-ink); white-space: nowrap; }
       @media (max-width: 640px) {
         .meta-layout { flex-direction: column; gap: 18px; }
         .meta-details { width: 100%; min-width: 0; }
@@ -461,7 +471,7 @@
 
       /* ================= Estado ================= */
       var state = {
-        miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [],
+        miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [], aportes: [],
         configuracion: {},
         loaded: false
       };
@@ -578,10 +588,43 @@
         var v = Math.round(p * 10) / 10;
         return v.toFixed(1).replace(".", ",") + "%";
       }
+      /* ---------- Aportes de proveedores (tabla aportes: destino, proveedor, tipo, monto) ---------- */
+      function aportesDe(destino) {
+        return (state.aportes || []).filter(function (a) { return a && a.destino === destino; });
+      }
+      function aportesSuma(destino) {
+        return aportesDe(destino).reduce(function (acc, a) {
+          var m = (a.monto === null || a.monto === undefined || a.monto === "") ? null : Number(a.monto);
+          return acc + (m !== null && !isNaN(m) ? m : 0);
+        }, 0);
+      }
+      /* Lista limpia: nombre a la izquierda, tipo, y a la derecha el monto o «En especie». */
+      function aportesListHtml(destino, totalLabel) {
+        var list = aportesDe(destino);
+        if (!list.length) return "";
+        var rows = list.map(function (a) {
+          var m = (a.monto === null || a.monto === undefined || a.monto === "") ? null : Number(a.monto);
+          var tieneMonto = m !== null && !isNaN(m);
+          return '<div class="aporte-row"><span class="ap-name">' + esc(a.proveedor) + "</span>" +
+            (a.tipo ? '<span class="chip chip-tipo">' + esc(a.tipo) + "</span>" : "") +
+            (tieneMonto
+              ? '<span class="ap-monto">' + esc(fmtMoney(m)) + "</span>"
+              : '<span class="chip chip-especie">En especie</span>') + "</div>";
+        }).join("");
+        var total = aportesSuma(destino);
+        return '<div class="aportes"><div class="aportes-title">Aportes de proveedores</div>' + rows +
+          (total > 0
+            ? '<div class="aportes-total"><span>' + esc(totalLabel) + '</span><span class="ap-total-monto">' + esc(fmtMoney(total)) + "</span></div>"
+            : "") + "</div>";
+      }
       function megaSorteoDatos() {
         var meta = configNum("meta_sorteo");
-        var conf = configNum("sorteo_confirmados");
-        if (meta === null || conf === null || !(meta > 0)) return null;
+        if (meta === null || !(meta > 0)) return null;
+        /* Los confirmados salen de la suma de aportes del Mega Sorteo;
+           si la tabla no trae montos, se usa el valor de configuración. */
+        var suma = aportesSuma("megasorteo");
+        var conf = suma > 0 ? suma : configNum("sorteo_confirmados");
+        if (conf === null) conf = 0;
         var pct = (conf / meta) * 100;
         return { meta: meta, confirmados: conf, pct: pct, pctClamped: Math.max(0, Math.min(100, pct)), faltan: Math.max(0, meta - conf) };
       }
@@ -616,7 +659,8 @@
           api("sorteos?select=*&order=fecha.asc.nullslast,created_at.desc"),
           api("ingles?select=*&order=orden.asc,created_at.asc"),
           api("cuentas?select=*&order=fecha_compromiso.asc.nullslast,created_at.desc"),
-          api("configuracion?select=*").catch(function () { return []; })
+          api("configuracion?select=*").catch(function () { return []; }),
+          api("aportes?select=*&order=created_at.asc").catch(function () { return []; })
         ]).then(function (r) {
           state.miembros = r[0] || [];
           state.actividades = r[1] || [];
@@ -624,6 +668,7 @@
           state.ingles = r[3] || [];
           state.cuentas = r[4] || [];
           state.configuracion = parseConfig(r[5] || []);
+          state.aportes = r[6] || [];
           state.loaded = true;
           hideBanner();
           render();
@@ -841,6 +886,7 @@
           .sort(function (a, b) { return String(b.fecha || "").localeCompare(String(a.fecha || "")); });
         function sorteoCard(s) {
           var realizado = s.estado === "realizado";
+          var esMega = String(s.nombre || "").toLowerCase().indexOf("mega sorteo") !== -1;
           return '<div class="row-card">' + (s.fecha ? dateBadge(s.fecha) : "") +
             '<div class="grow"><div class="t">' + esc(s.nombre) + "</div>" +
             (s.descripcion ? '<div class="d">' + esc(s.descripcion) + "</div>" : "") +
@@ -852,7 +898,8 @@
             (realizado
               ? '<button type="button" class="icon-btn" onclick="setSorteoEstado(\'' + s.id + "',\'pendiente\')\">" + icon("undo") + "Volver a pendiente</button>"
               : '<button type="button" class="icon-btn ok-btn" onclick="setSorteoEstado(\'' + s.id + "',\'realizado\')\">" + icon("check") + "Marcar realizado</button>") +
-            '<button type="button" class="icon-btn" onclick="openSorteoForm(\'' + s.id + "')\">" + icon("pencil") + "Editar</button></div></div>";
+            '<button type="button" class="icon-btn" onclick="openSorteoForm(\'' + s.id + "')\">" + icon("pencil") + "Editar</button></div>" +
+            (esMega ? aportesListHtml("megasorteo", "Total confirmado") : "") + "</div>";
         }
         if (pend.length) h += '<h2 class="section-title" style="margin-top:4px">' + icon("ticket") + "Pendientes (" + pend.length + ')</h2><div class="list">' + pend.map(sorteoCard).join("") + "</div>";
         if (hechos.length) h += '<h2 class="section-title">' + icon("gift") + "Realizados (" + hechos.length + ')</h2><div class="list">' + hechos.map(sorteoCard).join("") + "</div>";
@@ -875,7 +922,8 @@
             (a.descripcion ? '<div class="d">' + esc(a.descripcion) + "</div>" : "") +
             '<div class="meta"><span class="date-txt">' + icon("calendar") + esc(fmtDate(a.fecha_inicio)) + (a.fecha_fin ? " → " + esc(fmtDate(a.fecha_fin)) : " · sin fecha de cierre") + '</span>' +
             '<span class="chip chip-' + esc(a.estado) + '">' + esc(cap(a.estado)) + "</span></div></div>" +
-            '<button type="button" class="icon-btn" onclick="openActividadForm(\'' + a.id + "')\">" + icon("pencil") + "Editar</button></div>";
+            '<button type="button" class="icon-btn" onclick="openActividadForm(\'' + a.id + "')\">" + icon("pencil") + "Editar</button>" +
+            (String(a.nombre || "").toLowerCase().indexOf("aniversario") !== -1 ? aportesListHtml("aniversarios", "Total en notas") : "") + "</div>";
         }).join("") + "</div>";
         return h;
       }
