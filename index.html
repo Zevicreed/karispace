@@ -119,7 +119,7 @@
         padding-bottom: env(safe-area-inset-bottom);
         box-shadow: 0 -4px 18px rgba(0,0,0,.08);
       }
-      .dock-in { display: grid; grid-template-columns: repeat(5, 1fr); }
+      .dock-in { display: grid; grid-template-columns: repeat(6, 1fr); }
       .dock button {
         border: 0; background: transparent; color: var(--ink-2);
         display: flex; flex-direction: column; align-items: center; gap: 2px;
@@ -471,7 +471,7 @@
 
       /* ================= Estado ================= */
       var state = {
-        miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [], aportes: [],
+        miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [], aportes: [], cabezales: [],
         configuracion: {},
         loaded: false
       };
@@ -482,9 +482,10 @@
         { id: "sorteos", label: "Sorteos", icon: "ticket" },
         { id: "actividades", label: "Actividades", icon: "calendar" },
         { id: "ingles", label: "Inglés", icon: "book" },
-        { id: "cuentas", label: "Cuentas claras", icon: "scale" }
+        { id: "cuentas", label: "Cuentas claras", icon: "scale" },
+        { id: "cabezales", label: "Cabezales", icon: "display" }
       ];
-      var DOCK_LABELS = { home: "Home", sorteos: "Sorteos", actividades: "Activ.", ingles: "Inglés", cuentas: "Cuentas" };
+      var DOCK_LABELS = { home: "Home", sorteos: "Sorteos", actividades: "Activ.", ingles: "Inglés", cuentas: "Cuentas", cabezales: "Cabezal" };
       var ESTADOS_ACTIVIDAD = ["planeada", "activa", "pausada", "finalizada"];
       var TIPOS_CUENTA = [
         { id: "correo", label: "Correo", icon: "mail" },
@@ -512,7 +513,8 @@
         alert: '<path d="M12 3 2 20h20Z"/><path d="M12 10v4M12 17.5v.5"/>',
         check: '<path d="m4 12.5 5 5L20 6.5"/>',
         undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
-        gift: '<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>'
+        gift: '<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
+        display: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 9v12M16 9v12"/><path d="M8 15h8"/>'
       };
       function icon(name, cls) {
         return '<svg class="' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || "") + "</svg>";
@@ -660,7 +662,8 @@
           api("ingles?select=*&order=orden.asc,created_at.asc"),
           api("cuentas?select=*&order=fecha_compromiso.asc.nullslast,created_at.desc"),
           api("configuracion?select=*").catch(function () { return []; }),
-          api("aportes?select=*&order=created_at.asc").catch(function () { return []; })
+          api("aportes?select=*&order=created_at.asc").catch(function () { return []; }),
+          api("cabezales_interesados?select=*&order=proveedor.asc").catch(function () { return []; })
         ]).then(function (r) {
           state.miembros = r[0] || [];
           state.actividades = r[1] || [];
@@ -669,6 +672,7 @@
           state.cuentas = r[4] || [];
           state.configuracion = parseConfig(r[5] || []);
           state.aportes = r[6] || [];
+          state.cabezales = r[7] || [];
           state.loaded = true;
           hideBanner();
           render();
@@ -719,6 +723,7 @@
         else if (currentModule === "actividades") v.innerHTML = viewActividades();
         else if (currentModule === "ingles") v.innerHTML = viewIngles();
         else if (currentModule === "cuentas") v.innerHTML = viewCuentas();
+        else if (currentModule === "cabezales") v.innerHTML = viewCabezales();
       }
       function modHead(title, sub, btnHtml) {
         return '<div class="mod-head"><div><h1>' + esc(title) + "</h1><p>" + esc(sub) + '</p></div><div class="spacer"></div>' + (btnHtml || "") + "</div>";
@@ -1010,6 +1015,35 @@
           .catch(function (err) { toast("No se pudo actualizar: " + err.message, true); });
       }
 
+      /* ================= Vista: Cabezales ================= */
+      function viewCabezales() {
+        var h = modHead("Interesados en cabezales", "Proveedores interesados en contratar cabezales en las sedes.", newBtn("Agregar proveedor", "openCabezalForm()"));
+        h += '<div class="grid-cards" style="margin-bottom:4px">' +
+          '<section class="card"><h3>' + icon("display") + 'Interesados</h3><div class="big-num">' + state.cabezales.length + '</div><div class="sub">' + (state.cabezales.length === 1 ? "proveedor interesado en cabezales" : "proveedores interesados en cabezales") + '</div></section></div>';
+        if (!state.cabezales.length) {
+          h += '<div class="card" style="margin-top:16px"><p class="sub" style="margin:0">Todavía no hay proveedores registrados. Agrega el primero con el botón «Agregar proveedor».</p></div>';
+          return h;
+        }
+        h += '<h2 class="section-title">' + icon("display") + "Proveedores (" + state.cabezales.length + ')</h2><div class="list">' +
+          state.cabezales.map(function (c) {
+            return '<div class="row-card"><div class="grow"><div class="t">' + esc(c.proveedor) + "</div>" +
+              (c.notas ? '<div class="meta"><span class="chip chip-tipo">' + esc(c.notas) + "</span></div>" : "") + "</div>" +
+              '<div class="actions">' +
+              '<button type="button" class="icon-btn" onclick="openCabezalForm(\'' + c.id + "')\">" + icon("pencil") + "Editar</button>" +
+              '<button type="button" class="icon-btn" onclick="deleteCabezal(\'' + c.id + "')\">" + icon("trash") + "Eliminar</button></div></div>";
+          }).join("") + "</div>";
+        return h;
+      }
+      function deleteCabezal(id) {
+        var c = state.cabezales.find(function (x) { return String(x.id) === String(id); });
+        if (!c) return;
+        confirmDelete(c.proveedor || "este proveedor", function () {
+          apiDelete("cabezales_interesados", id)
+            .then(function () { closeModal(); toast("Eliminado"); return loadAll(true); })
+            .catch(function (err) { closeModal(); toast("No se pudo eliminar: " + err.message, true); });
+        });
+      }
+
       /* ================= Modal genérico ================= */
       var overlay = document.getElementById("overlay");
       var modalBox = document.getElementById("modalBox");
@@ -1196,6 +1230,25 @@
             return c ? apiUpdate("cuentas", c.id, payload) : apiCreate("cuentas", payload);
           },
           onDelete: c ? function () { return apiDelete("cuentas", c.id); } : null
+        });
+      }
+
+      function openCabezalForm(id) {
+        var c = id ? state.cabezales.find(function (x) { return String(x.id) === String(id); }) : null;
+        showForm({
+          title: c ? "Editar interesado en cabezales" : "Agregar interesado en cabezales",
+          hint: "Anota el proveedor interesado en contratar cabezales en las sedes. La nota es opcional: sirve para un contacto o detalle (ej.: la marca o persona de referencia).",
+          values: c || {},
+          fields: [
+            { name: "proveedor", label: "Proveedor *", type: "text", ph: "Ej.: Nombre del proveedor o marca" },
+            { name: "notas", label: "Nota", type: "text", ph: "Ej.: Kaly (opcional)" }
+          ],
+          onSubmit: function (v) {
+            if (!v.proveedor) return Promise.reject(new Error("Indica el proveedor."));
+            var payload = { proveedor: v.proveedor, notas: v.notas };
+            return c ? apiUpdate("cabezales_interesados", c.id, payload) : apiCreate("cabezales_interesados", payload);
+          },
+          onDelete: c ? function () { return apiDelete("cabezales_interesados", c.id); } : null
         });
       }
 
