@@ -180,6 +180,47 @@
       .bar > i.ok-fill { background: var(--ok); }
       .bar-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-top: 7px; font-weight: 500; }
 
+      /* ---------- Progreso: meta del Mega Sorteo ---------- */
+      .meta-progress { margin-bottom: 20px; padding: 20px; }
+      .meta-progress-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 16px; }
+      .meta-progress-head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
+      .meta-progress-head h3 svg { width: 19px; height: 19px; color: var(--brand); }
+      .meta-progress-head .spacer { flex: 1; }
+      .meta-layout { display: flex; gap: 26px; align-items: center; }
+      .donut-wrap { position: relative; width: 168px; height: 168px; flex-shrink: 0; margin: 0 auto; }
+      .donut-wrap svg.ring { width: 168px; height: 168px; display: block; transform: rotate(-90deg); }
+      .donut-center {
+        position: absolute; inset: 0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center; text-align: center; pointer-events: none; padding: 0 22px;
+      }
+      .donut-pct { font-family: "Poppins", sans-serif; font-size: 34px; font-weight: 800; line-height: 1; color: var(--ink); letter-spacing: -.01em; }
+      .donut-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin-top: 6px; line-height: 1.3; }
+      .meta-details { flex: 1; min-width: 250px; }
+      .meta-amount { font-family: "Poppins", sans-serif; font-size: 23px; font-weight: 700; line-height: 1.3; color: var(--ink); }
+      .meta-amount .conf { color: var(--brand-ink); }
+      .meta-sub { color: var(--ink-2); font-size: 13.5px; margin-top: 4px; }
+      .meta-bar { height: 20px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 14px; }
+      .meta-bar > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); transition: width .6s ease; }
+      .meta-legend { display: flex; gap: 10px 18px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; color: var(--ink-2); font-weight: 500; }
+      .meta-legend b { color: var(--ink); font-family: "Poppins", sans-serif; }
+      .meta-faltan {
+        display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
+        background: var(--warn-soft); color: var(--warn); font-weight: 700; font-size: 14.5px;
+        padding: 8px 13px; border-radius: 10px;
+      }
+      .meta-faltan svg { width: 16px; height: 16px; }
+      .meta-faltan.done { background: var(--ok-soft); color: var(--ok); }
+      .meta-mini-bar { height: 10px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
+      .meta-mini-bar > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
+      @media (max-width: 640px) {
+        .meta-layout { flex-direction: column; gap: 18px; }
+        .meta-details { width: 100%; min-width: 0; }
+        .meta-amount { font-size: 21px; text-align: center; }
+        .meta-sub { text-align: center; }
+        .meta-legend { justify-content: center; }
+        .meta-faltan { display: flex; justify-content: center; }
+      }
+
       /* ---------- Chips ---------- */
       .chip {
         display: inline-flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700;
@@ -337,7 +378,7 @@
       }
 
       /* ---------- Ocultar la insignia «Powered by Netlify» inyectada por el hosting ---------- */
-      .netlify-badge, #netlify-badge, [data-netlify-badge], .netlify-credit,
+      .netlify-badge, #netlify-badge, #nl-badge-frame, [data-netlify-badge], .netlify-credit,
       #powered-by-netlify, div[class*="netlify" i], div[id*="netlify" i],
       span[class*="netlify" i], a[class*="netlify" i], a[id*="netlify" i],
       iframe[src*="netlify" i] {
@@ -421,6 +462,7 @@
       /* ================= Estado ================= */
       var state = {
         miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [],
+        configuracion: {},
         loaded: false
       };
       var currentModule = "home";
@@ -496,6 +538,53 @@
         return d.toLocaleDateString("es-VE", { day: "numeric", month: "short", year: "numeric" });
       }
       function cap(s) { s = String(s || ""); return s.charAt(0).toUpperCase() + s.slice(1).replace(/_/g, " "); }
+      /* ---------- Configuración (tabla configuracion, clave/valor) ---------- */
+      function parseConfig(rows) {
+        var map = {};
+        (rows || []).forEach(function (r) {
+          if (!r) return;
+          var k = r.clave || r.key || r.nombre || r.config_key;
+          var v = r.valor !== undefined ? r.valor : (r.value !== undefined ? r.value : r.val);
+          if (k !== undefined && k !== null && String(k).trim() !== "") map[String(k).trim()] = v;
+        });
+        return map;
+      }
+      function configNum(key) {
+        var raw = (state.configuracion || {})[key];
+        if (raw === null || raw === undefined || raw === "") return null;
+        if (typeof raw === "number") return isNaN(raw) ? null : raw;
+        var s = String(raw).trim().replace(/[$\s]/g, "");
+        if (!s) return null;
+        var n;
+        if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(s)) {
+          n = parseFloat(s.replace(/\./g, "").replace(",", "."));
+        } else if (s.indexOf(",") !== -1) {
+          n = parseFloat(s.replace(/\./g, "").replace(",", "."));
+        } else {
+          n = parseFloat(s);
+        }
+        return isNaN(n) ? null : n;
+      }
+      /* Monto sin decimales, miles con punto: $1.234 */
+      function fmtMoney(n) {
+        if (n === null || n === undefined || isNaN(n)) return "—";
+        var neg = n < 0;
+        var abs = String(Math.round(Math.abs(n)));
+        return (neg ? "-$" : "$") + abs.replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+      }
+      /* Porcentaje con coma decimal y un decimal: 2,5% */
+      function fmtPct(p) {
+        if (p === null || p === undefined || isNaN(p)) return "—";
+        var v = Math.round(p * 10) / 10;
+        return v.toFixed(1).replace(".", ",") + "%";
+      }
+      function megaSorteoDatos() {
+        var meta = configNum("meta_sorteo");
+        var conf = configNum("sorteo_confirmados");
+        if (meta === null || conf === null || !(meta > 0)) return null;
+        var pct = (conf / meta) * 100;
+        return { meta: meta, confirmados: conf, pct: pct, pctClamped: Math.max(0, Math.min(100, pct)), faltan: Math.max(0, meta - conf) };
+      }
       function tipoCuenta(id) {
         for (var i = 0; i < TIPOS_CUENTA.length; i++) if (TIPOS_CUENTA[i].id === id) return TIPOS_CUENTA[i];
         return TIPOS_CUENTA[3];
@@ -526,13 +615,15 @@
           api("actividades?select=*&order=orden.asc,fecha_inicio.asc"),
           api("sorteos?select=*&order=fecha.asc.nullslast,created_at.desc"),
           api("ingles?select=*&order=orden.asc,created_at.asc"),
-          api("cuentas?select=*&order=fecha_compromiso.asc.nullslast,created_at.desc")
+          api("cuentas?select=*&order=fecha_compromiso.asc.nullslast,created_at.desc"),
+          api("configuracion?select=*").catch(function () { return []; })
         ]).then(function (r) {
           state.miembros = r[0] || [];
           state.actividades = r[1] || [];
           state.sorteos = r[2] || [];
           state.ingles = r[3] || [];
           state.cuentas = r[4] || [];
+          state.configuracion = parseConfig(r[5] || []);
           state.loaded = true;
           hideBanner();
           render();
@@ -616,12 +707,18 @@
         var h = modHead("¿Cómo vamos?", "La vista rápida del equipo: sorteos por realizar, actividades en marcha, el avance en inglés y lo pendiente con proveedores.");
         h += '<div class="grid-cards">';
         /* Sorteos */
+        var megaD = megaSorteoDatos();
         h += '<section class="card"><h3>' + icon("ticket") + 'Sorteos</h3>' +
           '<div class="big-num">' + sortPend.length + '</div>' +
           '<div class="sub">' + (sortPend.length === 1 ? "sorteo pendiente por realizar" : "sorteos pendientes por realizar") + "</div>" +
           (sortProx
             ? '<p class="sub" style="margin-top:10px">Próximo: <strong style="color:var(--ink)">' + esc(sortProx.nombre) + "</strong> · " + esc(fmtDate(sortProx.fecha)) + "</p>"
             : '<p class="sub" style="margin-top:10px">Sin sorteos con fecha programada.</p>') +
+          (megaD
+            ? '<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><div style="font-weight:700;font-size:13.5px">Mega Sorteo · ' + esc(fmtPct(megaD.pct)) + ' de la meta</div>' +
+              '<div class="sub" style="margin-top:2px">' + esc(fmtMoney(megaD.confirmados)) + ' confirmados de ' + esc(fmtMoney(megaD.meta)) + ' · Faltan ' + esc(fmtMoney(megaD.faltan)) + '</div>' +
+              '<div class="meta-mini-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(megaD.pctClamped) + '" aria-label="Progreso hacia la meta del Mega Sorteo"><i style="width:' + megaD.pctClamped + '%"></i></div></div>'
+            : '') +
           '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'sorteos\')">Ver sorteos</button></p></section>';
         /* Actividades */
         h += '<section class="card"><h3>' + icon("calendar") + 'Actividades</h3>' +
@@ -688,9 +785,52 @@
         return h;
       }
 
+      /* ================= Progreso de aportes: Mega Sorteo ================= */
+      function megaSorteoProgressHtml() {
+        var mega = null;
+        for (var i = 0; i < state.sorteos.length; i++) {
+          if (String(state.sorteos[i].nombre || "").toLowerCase().indexOf("mega sorteo") !== -1) { mega = state.sorteos[i]; break; }
+        }
+        var titulo = mega ? mega.nombre : "Mega Sorteo Fin de Año";
+        var d = megaSorteoDatos();
+        if (!d) {
+          return '<section class="card meta-progress" aria-label="Progreso de aportes del Mega Sorteo">' +
+            '<div class="meta-progress-head"><h3>' + icon("ticket") + esc(titulo) + ' — Meta de aportes</h3></div>' +
+            '<p class="sub" style="margin:0">La meta y los aportes confirmados se leen de la configuración del equipo. Si acaban de cargarse, toca «Actualizar» para ver el progreso aquí.</p></section>';
+        }
+        var R = 52, C = 2 * Math.PI * R;
+        var dash = (C * d.pctClamped / 100).toFixed(2);
+        var completa = d.faltan <= 0;
+        var h = '<section class="card meta-progress" aria-label="Progreso de aportes del Mega Sorteo">';
+        h += '<div class="meta-progress-head"><h3>' + icon("ticket") + esc(titulo) + ' — Progreso de aportes</h3><div class="spacer"></div>' +
+          '<span class="chip chip-mod">Aportes de proveedores</span></div>';
+        h += '<div class="meta-layout">';
+        /* Torta (donut) con el porcentaje en el centro */
+        h += '<div class="donut-wrap" role="img" aria-label="Avance del ' + esc(fmtPct(d.pct)) + ' hacia la meta">' +
+          '<svg class="ring" viewBox="0 0 120 120" aria-hidden="true">' +
+          '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="var(--surface-2)" stroke-width="13"></circle>' +
+          '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="var(--brand)" stroke-width="13" stroke-linecap="round" stroke-dasharray="' + dash + ' ' + C.toFixed(2) + '"></circle>' +
+          '</svg>' +
+          '<div class="donut-center"><div class="donut-pct">' + esc(fmtPct(d.pct)) + '</div><div class="donut-label">de la meta</div></div></div>';
+        /* Barra horizontal + cifras */
+        h += '<div class="meta-details">' +
+          '<div class="meta-amount"><span class="conf">' + esc(fmtMoney(d.confirmados)) + ' confirmados</span> de ' + esc(fmtMoney(d.meta)) + '</div>' +
+          '<div class="meta-sub">Aportes de proveedores confirmados frente a la meta del sorteo.</div>' +
+          '<div class="meta-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(d.pctClamped) + '" aria-label="Progreso hacia la meta del Mega Sorteo"><i style="width:' + d.pctClamped + '%"></i></div>' +
+          '<div class="meta-legend"><span>Confirmados: <b>' + esc(fmtMoney(d.confirmados)) + '</b></span><span>Meta: <b>' + esc(fmtMoney(d.meta)) + '</b></span><span>Avance: <b>' + esc(fmtPct(d.pct)) + '</b></span></div>' +
+          (completa
+            ? '<div class="meta-faltan done">' + icon("check") + '¡Meta alcanzada!</div>'
+            : '<div class="meta-faltan">' + icon("flag") + 'Faltan ' + esc(fmtMoney(d.faltan)) + '</div>') +
+          (mega && mega.notas ? '<div class="meta-sub" style="margin-top:12px">' + esc(mega.notas) + '</div>' : '') +
+          '</div>';
+        h += '</div></section>';
+        return h;
+      }
+
       /* ================= Vista: Sorteos ================= */
       function viewSorteos() {
         var h = modHead("Sorteos", "Los sorteos que el equipo tiene pendientes por realizar y el registro de los ya hechos.", newBtn("Nuevo sorteo", "openSorteoForm()"));
+        h += megaSorteoProgressHtml();
         if (!state.sorteos.length) {
           h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay sorteos registrados. Crea el primero con el botón «Nuevo sorteo».</p></div>';
           return h;
