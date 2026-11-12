@@ -8,43 +8,51 @@
     <title>KariSpace</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Anton&family=Montserrat:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
     <style>
       :root {
         color-scheme: light dark;
         --brand: #F47C20;
+        --brand-deep: #E05E00;
         --brand-soft: #FDEBD9;
         --brand-ink: #8A3E00;
         --yellow: #FFD100;
         --yellow-soft: #FFF3B0;
-        --bg: #F6F5F2;
+        --bg: #F7F3EE;
         --surface: #FFFFFF;
-        --surface-2: #EFEDE8;
-        --ink: #1C1710;
-        --ink-2: #5A5142;
-        --line: #E2DCD0;
+        --surface-2: #EFE9DC;
+        --ink: #2B2620;
+        --ink-2: #71624F;
+        --line: #E9DFCE;
         --ok: #1E7A3C;
         --ok-soft: #DDF2E2;
-        --warn: #9A6200;
+        --warn: #8F5D00;
         --warn-soft: #FCEFC7;
         --bad: #B3261E;
         --bad-soft: #FADBD8;
         --info: #1D5FA8;
         --info-soft: #DCEBF9;
-        --shadow: 0 1px 2px rgba(28,23,16,.06), 0 8px 24px rgba(28,23,16,.07);
-        --radius: 14px;
+        --bar-bg: #FFFFFF;
+        --nav-ink: #55483A;
+        --track: #F1E8DA;
+        --donut-track: #FFF0BF;
+        --cream: #FDF0E2;
+        --cream-line: #F6C489;
+        --cream-ink: #3D2C14;
+        --shadow: 0 12px 30px rgba(96,54,0,.10);
+        --radius: 16px;
       }
       @media (prefers-color-scheme: dark) {
         :root {
           --brand-soft: #4A2C10;
           --brand-ink: #FFB877;
           --yellow-soft: #4D3F00;
-          --bg: #16120D;
-          --surface: #211B14;
-          --surface-2: #2C251B;
-          --ink: #F7F1E6;
-          --ink-2: #C4BBA8;
-          --line: #3A3226;
+          --bg: #171310;
+          --surface: #241D15;
+          --surface-2: #2E2519;
+          --ink: #F8F2E7;
+          --ink-2: #C6BBA7;
+          --line: #3B3226;
           --ok: #7BD79B;
           --ok-soft: #173D26;
           --warn: #FFCE6B;
@@ -53,61 +61,67 @@
           --bad-soft: #47201C;
           --info: #8FC2F5;
           --info-soft: #1B3350;
-          --shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+          --bar-bg: #241D15;
+          --nav-ink: #C6BBA7;
+          --track: #2E2519;
+          --donut-track: #4D3F00;
+          --shadow: 0 1px 2px rgba(0,0,0,.4), 0 10px 30px rgba(0,0,0,.35);
         }
       }
       * { box-sizing: border-box; }
-      html { -webkit-text-size-adjust: 100%; }
+      html { -webkit-text-size-adjust: 100%; overflow-x: clip; }
       body {
         margin: 0;
+        min-height: 100dvh;
+        overflow-x: clip;
         background: var(--bg);
         color: var(--ink);
-        font-family: "Inter", system-ui, sans-serif;
+        font-family: "Montserrat", system-ui, sans-serif;
         font-size: 15px;
         line-height: 1.45;
       }
-      h1, h2, h3, .poppins { font-family: "Poppins", "Inter", sans-serif; }
+      h1, h2, h3, .poppins {
+        font-family: "Anton", "Montserrat", sans-serif;
+        font-weight: 400;
+        letter-spacing: .015em;
+      }
       button { font: inherit; cursor: pointer; }
       input, select, textarea { font: inherit; color: var(--ink); }
       a { color: var(--brand-ink); }
 
-      /* ---------- Header / nav escritorio ---------- */
+      /* ---------- Header / nav escritorio (barra blanca de marca) ---------- */
       .topbar {
         position: sticky; top: 0; z-index: 40;
-        background: var(--surface);
-        border-bottom: 3px solid var(--brand);
+        background: var(--bar-bg);
+        box-shadow: 0 1px 0 rgba(43,38,32,.08);
       }
       .topbar-in {
         max-width: 1180px; margin: 0 auto; padding: 0 20px;
-        display: flex; align-items: center; gap: 18px; min-height: 58px;
+        display: flex; align-items: center; gap: 18px; min-height: 60px;
       }
       .wordmark {
-        font-family: "Poppins", sans-serif; font-weight: 800; font-size: 21px;
-        letter-spacing: -.02em; white-space: nowrap; color: var(--ink);
+        font-family: "Anton", sans-serif; font-weight: 400; font-size: 27px;
+        letter-spacing: .4px; white-space: nowrap; color: var(--ink);
       }
-      .wordmark b { color: var(--brand); font-weight: 800; }
-      .wordmark .dot {
-        display: inline-block; width: 9px; height: 9px; border-radius: 50%;
-        background: var(--yellow); margin-left: 2px; vertical-align: baseline;
-        box-shadow: 0 0 0 2px var(--ink);
-      }
-      .topnav { display: flex; gap: 2px; flex: 1; overflow-x: auto; scrollbar-width: none; }
+      .wordmark .sp { color: var(--brand); }
+      .wordmark .yd { color: var(--yellow); }
+      .topnav { display: flex; gap: 3px; flex: 1; overflow-x: auto; scrollbar-width: none; }
       .topnav::-webkit-scrollbar { display: none; }
       .topnav button {
-        border: 0; background: transparent; color: var(--ink-2);
-        font-weight: 600; font-size: 14px; padding: 9px 12px; border-radius: 9px;
+        border: 0; background: transparent; color: var(--nav-ink);
+        font-weight: 700; font-size: 14px; padding: 9px 15px; border-radius: 99px;
         white-space: nowrap; display: inline-flex; align-items: center; gap: 7px;
       }
       .topnav button svg { width: 17px; height: 17px; }
       .topnav button:hover { background: var(--surface-2); color: var(--ink); }
-      .topnav button.active { background: var(--brand); color: #241300; }
+      .topnav button.active { background: var(--brand); color: #FFFFFF; box-shadow: 0 4px 14px rgba(244,124,32,.45); }
       .refresh-btn {
-        border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
-        border-radius: 9px; padding: 8px 10px; display: inline-flex; align-items: center; gap: 6px;
-        font-weight: 600; font-size: 13px; white-space: nowrap;
+        border: 1.5px solid var(--line); background: var(--bar-bg); color: var(--nav-ink);
+        border-radius: 99px; padding: 8px 15px; display: inline-flex; align-items: center; gap: 7px;
+        font-weight: 700; font-size: 13px; white-space: nowrap;
       }
-      .refresh-btn:hover { border-color: var(--brand); }
-      .refresh-btn svg { width: 16px; height: 16px; }
+      .refresh-btn:hover { border-color: var(--brand); color: var(--ink); }
+      .refresh-btn svg { width: 15px; height: 15px; color: var(--brand); }
       .refresh-btn.spinning svg { animation: spin 0.8s linear infinite; }
       @keyframes spin { to { transform: rotate(360deg); } }
 
@@ -117,21 +131,22 @@
         position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
         background: var(--surface); border-top: 1px solid var(--line);
         padding-bottom: env(safe-area-inset-bottom);
-        box-shadow: 0 -4px 18px rgba(0,0,0,.08);
+        box-shadow: 0 -4px 18px rgba(0,0,0,.10);
       }
       .dock-in { display: grid; grid-template-columns: repeat(6, 1fr); }
       .dock button {
         border: 0; background: transparent; color: var(--ink-2);
         display: flex; flex-direction: column; align-items: center; gap: 2px;
-        padding: 8px 2px 7px; font-size: 10px; font-weight: 600; line-height: 1.1;
-        min-height: 54px; justify-content: center;
+        padding: 8px 2px 7px; font-size: 10px; font-weight: 700; line-height: 1.1;
+        min-height: 50px; justify-content: center;
+        margin: 5px 3px; border-radius: 12px;
       }
       .dock button svg { width: 20px; height: 20px; }
-      .dock button.active { color: var(--brand-ink); }
-      .dock button.active svg { color: var(--brand); }
-      .dock button.active .dock-label { color: var(--ink); }
+      .dock button.active { background: var(--brand); color: #FFFFFF; box-shadow: 0 4px 12px rgba(244,124,32,.40); }
+      .dock button.active svg { color: #FFFFFF; }
+      .dock button.active .dock-label { color: #FFFFFF; }
 
-      main { max-width: 1180px; margin: 0 auto; padding: 22px 20px 40px; }
+      main { max-width: 1180px; margin: 0 auto; padding: 26px 20px 44px; }
       @media (max-width: 760px) {
         .topnav { display: none; }
         .dock { display: block; }
@@ -140,51 +155,131 @@
       }
 
       /* ---------- Encabezado de módulo ---------- */
-      .mod-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
-      .mod-head h1 { font-size: 26px; margin: 0; letter-spacing: -.01em; }
-      .mod-head p { margin: 3px 0 0; color: var(--ink-2); font-size: 14px; max-width: 560px; }
+      .mod-head { display: flex; align-items: flex-start; gap: 14px; flex-wrap: wrap; margin-bottom: 20px; }
+      .mod-head h1 { font-size: 31px; margin: 0; text-transform: uppercase; line-height: 1.08; }
+      .mod-head h1::after {
+        content: ""; display: block; width: 56px; height: 5px; border-radius: 3px;
+        background: var(--yellow); margin-top: 9px;
+      }
+      .mod-head p { margin: 8px 0 0; color: var(--ink-2); font-size: 14.5px; max-width: 560px; font-weight: 500; }
       .mod-head .spacer { flex: 1; }
+
+      /* ---------- Hero de Home: banda naranja de marca ---------- */
+      body[data-module="home"] .mod-head {
+        display: block;
+        background: linear-gradient(120deg, #F47C20 0%, #E05E00 100%);
+        margin: -26px calc(50% - 50vw) 0;
+        padding: 38px 20px 60px;
+        position: relative; overflow: hidden;
+      }
+      body[data-module="home"] .mod-head::before {
+        content: ""; position: absolute; width: 340px; height: 340px; border-radius: 50%;
+        background: rgba(255,255,255,.10); right: -90px; top: -160px;
+      }
+      body[data-module="home"] .mod-head::after {
+        content: ""; position: absolute; width: 200px; height: 200px; border-radius: 50%;
+        background: rgba(255,209,0,.18); right: 170px; bottom: -130px;
+      }
+      body[data-module="home"] .mod-head > div { position: relative; z-index: 1; }
+      body[data-module="home"] .mod-head > div:first-child { max-width: 1180px; margin: 0 auto; }
+      body[data-module="home"] .mod-head h1 {
+        color: #FFFFFF; font-size: clamp(38px, 5.4vw, 52px); letter-spacing: 1.5px;
+      }
+      body[data-module="home"] .mod-head h1::after { background: var(--yellow); width: 64px; height: 6px; }
+      body[data-module="home"] .mod-head p {
+        color: #FFFFFF; font-size: 15.5px; max-width: 660px; font-weight: 600;
+      }
+      body[data-module="home"] .grid-cards { margin-top: -30px; position: relative; z-index: 2; }
+      @media (max-width: 760px) {
+        body[data-module="home"] .mod-head { margin-top: -16px; padding: 30px 20px 54px; }
+      }
+
       .btn {
-        border: 0; border-radius: 10px; padding: 10px 16px; font-weight: 700; font-size: 14px;
+        border: 0; border-radius: 11px; padding: 10px 16px; font-weight: 700; font-size: 14px;
         display: inline-flex; align-items: center; gap: 7px; text-decoration: none;
       }
       .btn svg { width: 16px; height: 16px; }
-      .btn-primary { background: var(--brand); color: #241300; box-shadow: var(--shadow); }
-      .btn-primary:hover { background: #E06E0D; }
+      .btn-primary { background: var(--brand); color: #FFFFFF; box-shadow: 0 6px 16px rgba(244,124,32,.35); }
+      .btn-primary:hover { background: var(--brand-deep); }
       .btn-ghost { background: var(--surface); color: var(--ink); border: 1.5px solid var(--line); }
-      .btn-ghost:hover { border-color: var(--brand); }
+      .btn-ghost:hover { border-color: var(--brand); color: var(--brand-ink); }
       .btn-danger { background: var(--bad-soft); color: var(--bad); }
-      .btn-small { padding: 6px 11px; font-size: 13px; border-radius: 8px; }
+      .btn-small { padding: 7px 12px; font-size: 13px; border-radius: 9px; }
 
       /* ---------- Tarjetas resumen ---------- */
-      .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+      .grid-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 16px; }
       .card {
-        background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-        padding: 18px; box-shadow: var(--shadow);
+        background: var(--surface); border-radius: 18px;
+        padding: 22px 20px; box-shadow: var(--shadow);
       }
-      .card h3 { margin: 0 0 4px; font-size: 15px; display: flex; align-items: center; gap: 8px; }
-      .card h3 svg { width: 18px; height: 18px; color: var(--brand); }
-      .big-num { font-family: "Poppins", sans-serif; font-size: 32px; font-weight: 700; line-height: 1.1; }
+      /* Chips de icono circulares sólidos, uno por módulo (diseño «Marca Kari») */
+      .ic-sol-naranja h3 svg { background: var(--brand); color: #FFFFFF; }
+      .ic-sol-amarillo h3 svg { background: var(--yellow); color: #2B2620; }
+      .ic-sol-carbon h3 svg { background: #2B2620; color: var(--yellow); }
+      .ic-sol-quemado h3 svg { background: var(--brand-deep); color: #FFFFFF; }
+      @media (prefers-color-scheme: dark) {
+        .ic-sol-carbon h3 svg { background: #453B2E; }
+      }
+      .card h3 {
+        margin: 0 0 6px; font-size: 16.5px; text-transform: uppercase; letter-spacing: .8px;
+        display: flex; align-items: center; gap: 11px;
+      }
+      .card h3 svg {
+        width: 44px; height: 44px; padding: 11px; border-radius: 50%; flex-shrink: 0;
+        background: var(--brand-soft); color: var(--brand-ink);
+      }
+      .big-num { font-family: "Anton", sans-serif; font-size: 46px; font-weight: 400; line-height: 1.05; letter-spacing: .01em; }
       .big-num.bad { color: var(--bad); }
-      .card .sub { color: var(--ink-2); font-size: 13px; margin-top: 2px; }
-      .stat-row { display: flex; gap: 18px; flex-wrap: wrap; margin-top: 10px; }
-      .stat-row .st b { font-family: "Poppins", sans-serif; font-size: 20px; display: block; }
-      .stat-row .st span { font-size: 12px; color: var(--ink-2); font-weight: 600; text-transform: uppercase; letter-spacing: .04em; }
-      .section-title { font-size: 19px; margin: 26px 0 12px; display: flex; align-items: center; gap: 9px; }
-      .section-title svg { width: 20px; height: 20px; color: var(--brand); }
-      .section-title.bad svg { color: var(--bad); }
+      .card .sub { color: var(--ink-2); font-size: 13px; margin-top: 3px; font-weight: 500; }
+      .stat-row { display: flex; gap: 20px; flex-wrap: wrap; margin-top: 10px; }
+      .stat-row .st b { font-family: "Anton", sans-serif; font-weight: 400; font-size: 25px; display: block; line-height: 1.1; }
+      .stat-row .st span { font-size: 11.5px; color: var(--ink-2); font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+      .section-title {
+        font-size: 21px; margin: 30px 0 14px; text-transform: uppercase; letter-spacing: .03em;
+        display: flex; align-items: center; gap: 11px;
+      }
+      .section-title::before {
+        content: ""; width: 26px; height: 6px; border-radius: 3px; flex-shrink: 0;
+        background: var(--yellow);
+      }
+      .section-title svg { display: none; }
+      .section-title.bad::before { background: var(--bad); }
+
+      .etiqueta { font-size: 11px; font-weight: 700; letter-spacing: 1.2px; color: #9A5200; text-transform: uppercase; margin-top: 4px; }
+      @media (prefers-color-scheme: dark) { .etiqueta { color: var(--warn); } }
+      /* Mega Sorteo dentro de la tarjeta de Sorteos (Home) */
+      .mega { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 15px; }
+      .mega-t { font-weight: 700; font-size: 14px; color: var(--ink); margin-bottom: 10px; }
+      .mega-t span { color: var(--brand-deep); }
+      @media (prefers-color-scheme: dark) { .mega-t span { color: var(--brand-ink); } }
+      .mega-flex { display: flex; gap: 14px; align-items: center; }
+      .donut-sm { width: 86px; height: 86px; flex: none; }
+      .donut-num { font-family: "Anton", sans-serif; font-size: 15px; fill: var(--ink); }
+      .mega-datos { font-size: 13px; font-weight: 600; color: var(--ink-2); line-height: 1.55; }
+      .mega-datos b { color: var(--ink); }
+      /* Franja de Cabezales en Home y chips de proveedores */
+      .band-head { display: flex; align-items: center; gap: 11px; }
+      .band-head h3 { margin: 0; flex: 1; }
+      .count-pill { font-family: "Anton", sans-serif; font-size: 14px; color: #FFFFFF; background: var(--brand); padding: 5px 13px; border-radius: 999px; letter-spacing: .5px; white-space: nowrap; }
+      .prov-chips { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 15px; }
+      .prov-chip { background: var(--cream); border: 1.5px solid var(--cream-line); color: var(--cream-ink); font-weight: 700; font-size: 13.5px; padding: 8px 15px; border-radius: 999px; }
+      .prov-chip b { color: var(--brand-deep); font-weight: 700; }
+      .chip-nota { background: var(--cream); color: var(--brand-deep); border: 1px solid var(--cream-line); font-weight: 700; }
 
       /* ---------- Barras de progreso ---------- */
-      .bar { height: 14px; border-radius: 99px; background: var(--surface-2); overflow: hidden; position: relative; margin-top: 10px; }
+      .bar { height: 10px; border-radius: 99px; background: var(--track); overflow: hidden; position: relative; margin-top: 12px; }
       .bar > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
       .bar > i.ok-fill { background: var(--ok); }
-      .bar-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-top: 7px; font-weight: 500; }
+      .bar-legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12.5px; color: var(--ink-2); margin-top: 7px; font-weight: 600; }
 
       /* ---------- Progreso: meta del Mega Sorteo ---------- */
-      .meta-progress { margin-bottom: 20px; padding: 20px; }
+      .meta-progress { margin-bottom: 20px; padding: 22px; }
       .meta-progress-head { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; margin-bottom: 16px; }
-      .meta-progress-head h3 { margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; }
-      .meta-progress-head h3 svg { width: 19px; height: 19px; color: var(--brand); }
+      .meta-progress-head h3 { margin: 0; font-size: 17px; text-transform: none; letter-spacing: .01em; display: flex; align-items: center; gap: 8px; }
+      .meta-progress-head h3 svg {
+        width: 44px; height: 44px; padding: 11px; border-radius: 50%; flex-shrink: 0;
+        background: var(--brand); color: #FFFFFF;
+      }
       .meta-progress-head .spacer { flex: 1; }
       .meta-layout { display: flex; gap: 26px; align-items: center; }
       .donut-wrap { position: relative; width: 168px; height: 168px; flex-shrink: 0; margin: 0 auto; }
@@ -193,16 +288,16 @@
         position: absolute; inset: 0; display: flex; flex-direction: column;
         align-items: center; justify-content: center; text-align: center; pointer-events: none; padding: 0 22px;
       }
-      .donut-pct { font-family: "Poppins", sans-serif; font-size: 34px; font-weight: 800; line-height: 1; color: var(--ink); letter-spacing: -.01em; }
+      .donut-pct { font-family: "Anton", sans-serif; font-size: 37px; font-weight: 400; line-height: 1; color: var(--ink); letter-spacing: .01em; }
       .donut-label { font-size: 11px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-2); margin-top: 6px; line-height: 1.3; }
       .meta-details { flex: 1; min-width: 250px; }
-      .meta-amount { font-family: "Poppins", sans-serif; font-size: 23px; font-weight: 700; line-height: 1.3; color: var(--ink); }
+      .meta-amount { font-family: "Anton", sans-serif; font-size: 24px; font-weight: 400; line-height: 1.3; color: var(--ink); letter-spacing: .01em; }
       .meta-amount .conf { color: var(--brand-ink); }
-      .meta-sub { color: var(--ink-2); font-size: 13.5px; margin-top: 4px; }
-      .meta-bar { height: 20px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 14px; }
+      .meta-sub { color: var(--ink-2); font-size: 13.5px; margin-top: 4px; font-weight: 500; }
+      .meta-bar { height: 16px; border-radius: 99px; background: var(--track); overflow: hidden; margin-top: 14px; }
       .meta-bar > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); transition: width .6s ease; }
       .meta-legend { display: flex; gap: 10px 18px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; color: var(--ink-2); font-weight: 500; }
-      .meta-legend b { color: var(--ink); font-family: "Poppins", sans-serif; }
+      .meta-legend b { color: var(--ink); font-family: "Anton", sans-serif; font-weight: 400; font-size: 15px; letter-spacing: .02em; }
       .meta-faltan {
         display: inline-flex; align-items: center; gap: 7px; margin-top: 14px;
         background: var(--warn-soft); color: var(--warn); font-weight: 700; font-size: 14.5px;
@@ -210,18 +305,18 @@
       }
       .meta-faltan svg { width: 16px; height: 16px; }
       .meta-faltan.done { background: var(--ok-soft); color: var(--ok); }
-      .meta-mini-bar { height: 10px; border-radius: 99px; background: var(--surface-2); overflow: hidden; margin-top: 10px; }
-      .meta-mini-bar > i { display: block; height: 100%; border-radius: 99px; background: var(--brand); }
+      .meta-mini-bar { height: 8px; border-radius: 99px; background: var(--track); overflow: hidden; margin-top: 10px; }
+      .meta-mini-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--yellow), var(--brand)); }
 
       /* ---------- Lista estructurada de aportes ---------- */
       .aportes { flex: 1 1 100%; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 11px; }
       .aportes-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin-bottom: 4px; }
       .aporte-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 7px 0; border-bottom: 1px dashed var(--line); }
       .aporte-row .ap-name { flex: 1; min-width: 170px; font-weight: 600; font-size: 14px; }
-      .aporte-row .ap-monto { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 15px; white-space: nowrap; }
-      .chip-especie { background: var(--info-soft); color: var(--info); }
+      .aporte-row .ap-monto { font-family: "Anton", sans-serif; font-weight: 400; font-size: 16px; letter-spacing: .02em; white-space: nowrap; }
+      .chip-especie { background: var(--cream); color: #8A4B00; border: 1px solid var(--cream-line); }
       .aportes-total { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 9px; font-weight: 700; font-size: 14.5px; }
-      .aportes-total .ap-total-monto { font-family: "Poppins", sans-serif; font-size: 16px; color: var(--brand-ink); white-space: nowrap; }
+      .aportes-total .ap-total-monto { font-family: "Anton", sans-serif; font-weight: 400; font-size: 18px; letter-spacing: .02em; color: var(--brand-ink); white-space: nowrap; }
       @media (max-width: 640px) {
         .meta-layout { flex-direction: column; gap: 18px; }
         .meta-details { width: 100%; min-width: 0; }
@@ -245,24 +340,24 @@
       .chip-finalizada { background: var(--surface-2); color: var(--ink-2); }
       .chip-mod { background: var(--brand-soft); color: var(--brand-ink); }
       .chip-late { background: var(--bad-soft); color: var(--bad); }
-      .chip-tipo { background: var(--info-soft); color: var(--info); }
+      .chip-tipo { background: var(--cream); color: #8A4B00; border: 1px solid var(--cream-line); }
 
       /* ---------- Listas ---------- */
-      .list { display: flex; flex-direction: column; gap: 10px; }
+      .list { display: flex; flex-direction: column; gap: 11px; }
       .row-card {
         background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-        padding: 15px 17px; box-shadow: var(--shadow);
+        padding: 16px 18px; box-shadow: var(--shadow);
         display: flex; gap: 14px; align-items: flex-start; flex-wrap: wrap;
       }
       .row-card.late { border-color: var(--bad); background: var(--bad-soft); }
       .row-card .grow { flex: 1; min-width: 200px; }
-      .row-card .t { font-weight: 700; font-size: 15.5px; font-family: "Poppins", sans-serif; }
-      .row-card .d { color: var(--ink-2); font-size: 13.5px; margin-top: 2px; white-space: pre-wrap; }
-      .row-card .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+      .row-card .t { font-weight: 400; font-size: 17.5px; font-family: "Anton", sans-serif; letter-spacing: .02em; }
+      .row-card .d { color: var(--ink-2); font-size: 13.5px; margin-top: 3px; white-space: pre-wrap; font-weight: 500; }
+      .row-card .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 9px; align-items: center; }
       .row-card .actions { display: flex; gap: 6px; flex-wrap: wrap; }
       .icon-btn {
         border: 1.5px solid var(--line); background: var(--surface); color: var(--ink);
-        border-radius: 8px; padding: 5px 9px; font-size: 12.5px; font-weight: 600;
+        border-radius: 9px; padding: 6px 10px; font-size: 12.5px; font-weight: 600;
         display: inline-flex; align-items: center; gap: 5px;
       }
       .icon-btn:hover { border-color: var(--brand); }
@@ -270,18 +365,18 @@
       .icon-btn.ok-btn { background: var(--ok-soft); color: var(--ok); border-color: transparent; }
       .who { font-size: 12.5px; font-weight: 600; display: inline-flex; align-items: center; gap: 5px; }
       .who svg { width: 14px; height: 14px; color: var(--ink-2); }
-      .date-txt { font-size: 12.5px; color: var(--ink-2); font-weight: 500; display: inline-flex; gap: 5px; align-items: center; }
+      .date-txt { font-size: 12.5px; color: var(--ink-2); font-weight: 600; display: inline-flex; gap: 5px; align-items: center; }
       .date-txt svg { width: 14px; height: 14px; }
       .date-txt.late { color: var(--bad); font-weight: 700; }
 
       /* ---------- Checklist de Inglés ---------- */
       .check-row {
         background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius);
-        padding: 13px 15px; box-shadow: var(--shadow);
+        padding: 14px 16px; box-shadow: var(--shadow);
         display: flex; gap: 12px; align-items: flex-start;
       }
       .check-box {
-        width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0; margin-top: 1px;
+        width: 28px; height: 28px; border-radius: 9px; flex-shrink: 0; margin-top: 1px;
         border: 2px solid var(--line); background: var(--surface); color: transparent;
         display: inline-flex; align-items: center; justify-content: center; padding: 0;
       }
@@ -289,9 +384,9 @@
       .check-box:hover { border-color: var(--brand); }
       .check-box.done { background: var(--ok); border-color: var(--ok); color: #fff; }
       .check-row .grow { flex: 1; min-width: 0; }
-      .check-row .t { font-weight: 600; font-size: 15px; }
+      .check-row .t { font-weight: 700; font-size: 15px; }
       .check-row.done .t { text-decoration: line-through; color: var(--ink-2); }
-      .check-row .d { color: var(--ink-2); font-size: 13px; margin-top: 1px; white-space: pre-wrap; }
+      .check-row .d { color: var(--ink-2); font-size: 13px; margin-top: 1px; white-space: pre-wrap; font-weight: 500; }
       .check-row .meta { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; align-items: center; }
 
       /* ---------- Modal / formularios ---------- */
@@ -303,13 +398,14 @@
       .modal {
         background: var(--surface); width: 100%; max-width: 560px; max-height: 92vh; overflow-y: auto;
         border-radius: 18px 18px 0 0; padding: 22px 22px calc(22px + env(safe-area-inset-bottom));
+        border-top: 5px solid var(--brand);
       }
       @media (min-width: 700px) {
         .overlay { align-items: center; padding: 20px; }
         .modal { border-radius: 18px; }
       }
-      .modal h2 { margin: 0 0 4px; font-size: 20px; }
-      .modal .hint { color: var(--ink-2); font-size: 13.5px; margin: 0 0 16px; }
+      .modal h2 { margin: 0 0 4px; font-size: 22px; text-transform: uppercase; letter-spacing: .02em; }
+      .modal .hint { color: var(--ink-2); font-size: 13.5px; margin: 0 0 16px; font-weight: 500; }
       .field { margin-bottom: 13px; }
       .field label { display: block; font-size: 13px; font-weight: 700; margin-bottom: 5px; }
       .field input, .field select, .field textarea {
@@ -356,19 +452,21 @@
       .upcoming-item { display: flex; gap: 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--line); }
       .upcoming-item:last-child { border-bottom: 0; }
       .date-badge {
-        background: var(--brand-soft); color: var(--brand-ink); border-radius: 10px;
-        min-width: 56px; text-align: center; padding: 6px 4px; flex-shrink: 0;
+        background: var(--brand); color: #FFFFFF; border-radius: 12px;
+        min-width: 56px; text-align: center; padding: 7px 4px; flex-shrink: 0;
+        box-shadow: 0 4px 12px rgba(244,124,32,.35);
       }
-      .date-badge b { display: block; font-family: "Poppins", sans-serif; font-size: 18px; line-height: 1; }
-      .date-badge span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
+      .date-badge b { display: block; font-family: "Anton", sans-serif; font-weight: 400; font-size: 20px; line-height: 1; }
+      .date-badge span { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: rgba(255,255,255,.88); }
       .members { display: flex; gap: 8px; flex-wrap: wrap; }
       .team-layout { display: flex; gap: 18px; align-items: flex-start; }
       .team-photo {
         width: 248px; max-width: 100%; aspect-ratio: 1 / 1; object-fit: cover;
-        border-radius: 10px; border: 1px solid var(--line); flex-shrink: 0; display: block;
+        border-radius: 14px; border: 3px solid var(--yellow); flex-shrink: 0; display: block;
+        box-shadow: var(--shadow);
       }
       .team-info { flex: 1; min-width: 200px; }
-      .team-info .caption { font-family: "Poppins", sans-serif; font-weight: 700; font-size: 15px; margin: 2px 0 10px; }
+      .team-info .caption { font-family: "Anton", sans-serif; font-weight: 400; letter-spacing: .02em; font-size: 17px; margin: 2px 0 12px; }
       @media (max-width: 640px) {
         .team-layout { flex-direction: column; }
         .team-photo { width: 100%; }
@@ -378,11 +476,11 @@
         border: 1px solid var(--line); border-radius: 99px; padding: 5px 13px 5px 6px; font-weight: 600; font-size: 13.5px;
       }
       .avatar {
-        width: 28px; height: 28px; border-radius: 50%; background: var(--brand); color: #241300;
+        width: 28px; height: 28px; border-radius: 50%; background: var(--brand); color: #FFFFFF;
         display: inline-flex; align-items: center; justify-content: center;
-        font-family: "Poppins", sans-serif; font-weight: 700; font-size: 13px;
+        font-family: "Anton", sans-serif; font-weight: 400; font-size: 13px;
       }
-      .avatar.alt { background: var(--yellow); }
+      .avatar.alt { background: var(--yellow); color: #241300; }
       @media (prefers-reduced-motion: reduce) {
         * { animation: none !important; transition: none !important; }
       }
@@ -402,7 +500,7 @@
   <body>
     <header class="topbar">
       <div class="topbar-in">
-        <div class="wordmark">Kari<b>Space</b><span class="dot"></span></div>
+        <div class="wordmark">Kari<span class="sp">Space</span><span class="yd">.</span></div>
         <nav class="topnav" id="topnav" aria-label="Módulos"></nav>
         <button class="refresh-btn" id="refreshBtn" type="button" title="Actualizar datos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
@@ -630,6 +728,15 @@
         var pct = (conf / meta) * 100;
         return { meta: meta, confirmados: conf, pct: pct, pctClamped: Math.max(0, Math.min(100, pct)), faltan: Math.max(0, meta - conf) };
       }
+      /* Dona pequeña de la tarjeta de Sorteos en Home (pista amarillo pálido, arco naranja) */
+      function donutSmHtml(d) {
+        var C = 2 * Math.PI * 32;
+        var dash = (C * d.pctClamped / 100).toFixed(2);
+        return '<svg class="donut-sm" viewBox="0 0 84 84" role="img" aria-label="Avance del ' + esc(fmtPct(d.pct)) + ' hacia la meta del Mega Sorteo">' +
+          '<circle cx="42" cy="42" r="32" fill="none" stroke="var(--donut-track)" stroke-width="11"></circle>' +
+          '<circle cx="42" cy="42" r="32" fill="none" stroke="var(--brand)" stroke-width="11" stroke-linecap="round" stroke-dasharray="' + dash + " " + C.toFixed(2) + '" transform="rotate(-90 42 42)"></circle>' +
+          '<text x="42" y="48" text-anchor="middle" class="donut-num">' + esc(fmtPct(d.pct)) + "</text></svg>";
+      }
       function tipoCuenta(id) {
         for (var i = 0; i < TIPOS_CUENTA.length; i++) if (TIPOS_CUENTA[i].id === id) return TIPOS_CUENTA[i];
         return TIPOS_CUENTA[3];
@@ -717,6 +824,7 @@
       function goModule(id) { currentModule = id; render(); window.scrollTo({ top: 0 }); }
       function render() {
         markNav();
+        document.body.setAttribute("data-module", currentModule);
         var v = document.getElementById("view");
         if (currentModule === "home") v.innerHTML = viewHome();
         else if (currentModule === "sorteos") v.innerHTML = viewSorteos();
@@ -758,20 +866,21 @@
         h += '<div class="grid-cards">';
         /* Sorteos */
         var megaD = megaSorteoDatos();
-        h += '<section class="card"><h3>' + icon("ticket") + 'Sorteos</h3>' +
+        h += '<section class="card ic-sol-naranja"><h3>' + icon("ticket") + 'Sorteos</h3>' +
           '<div class="big-num">' + sortPend.length + '</div>' +
-          '<div class="sub">' + (sortPend.length === 1 ? "sorteo pendiente por realizar" : "sorteos pendientes por realizar") + "</div>" +
+          '<div class="etiqueta">' + (sortPend.length === 1 ? "sorteo pendiente por realizar" : "sorteos pendientes por realizar") + "</div>" +
           (sortProx
             ? '<p class="sub" style="margin-top:10px">Próximo: <strong style="color:var(--ink)">' + esc(sortProx.nombre) + "</strong> · " + esc(fmtDate(sortProx.fecha)) + "</p>"
             : '<p class="sub" style="margin-top:10px">Sin sorteos con fecha programada.</p>') +
           (megaD
-            ? '<div style="margin-top:12px;border-top:1px solid var(--line);padding-top:12px"><div style="font-weight:700;font-size:13.5px">Mega Sorteo · ' + esc(fmtPct(megaD.pct)) + ' de la meta</div>' +
-              '<div class="sub" style="margin-top:2px">' + esc(fmtMoney(megaD.confirmados)) + ' confirmados de ' + esc(fmtMoney(megaD.meta)) + ' · Faltan ' + esc(fmtMoney(megaD.faltan)) + '</div>' +
+            ? '<div class="mega"><div class="mega-t">Mega Sorteo <span>· ' + esc(fmtPct(megaD.pct)) + ' de la meta</span></div>' +
+              '<div class="mega-flex">' + donutSmHtml(megaD) +
+              '<div class="mega-datos"><b>' + esc(fmtMoney(megaD.confirmados)) + '</b> confirmados<br>de <b>' + esc(fmtMoney(megaD.meta)) + '</b> de meta<br>Faltan <b>' + esc(fmtMoney(megaD.faltan)) + '</b></div></div>' +
               '<div class="meta-mini-bar" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="' + Math.round(megaD.pctClamped) + '" aria-label="Progreso hacia la meta del Mega Sorteo"><i style="width:' + megaD.pctClamped + '%"></i></div></div>'
             : '') +
           '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'sorteos\')">Ver sorteos</button></p></section>';
         /* Actividades */
-        h += '<section class="card"><h3>' + icon("calendar") + 'Actividades</h3>' +
+        h += '<section class="card ic-sol-amarillo"><h3>' + icon("calendar") + 'Actividades</h3>' +
           '<div class="stat-row"><div class="st"><b>' + actActivas.length + '</b><span>Activas</span></div>' +
           '<div class="st"><b>' + actProximas.length + '</b><span>Próximas</span></div></div>' +
           (actProximas.length
@@ -779,13 +888,13 @@
             : '<p class="sub" style="margin-top:10px">No hay actividades próximas registradas.</p>') +
           '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'actividades\')">Ver actividades</button></p></section>';
         /* Inglés */
-        h += '<section class="card"><h3>' + icon("book") + 'Inglés del equipo</h3>' +
+        h += '<section class="card ic-sol-carbon"><h3>' + icon("book") + 'Inglés del equipo</h3>' +
           '<div class="big-num">' + ingPct + '%</div>' +
           '<div class="sub">del plan completado · ' + ingDone + " de " + ingTotal + " ítems listos, faltan " + ingFaltan + "</div>" +
-          '<div class="bar"><i class="ok-fill" style="width:' + ingPct + '%"></i></div>' +
+          '<div class="bar"><i style="width:' + ingPct + '%"></i></div>' +
           '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'ingles\')">Ver el plan de inglés</button></p></section>';
         /* Cuentas claras */
-        h += '<section class="card"><h3>' + icon("scale") + 'Cuentas claras</h3>' +
+        h += '<section class="card ic-sol-quemado"><h3>' + icon("scale") + 'Cuentas claras</h3>' +
           '<div class="stat-row"><div class="st"><b>' + cuePend.length + '</b><span>Pendientes</span></div>' +
           '<div class="st"><b style="color:var(--bad)">' + cueVenc.length + '</b><span>Vencidas</span></div>' +
           '<div class="st"><b>' + cueSemana.length + '</b><span>Esta semana</span></div></div>' +
@@ -794,6 +903,17 @@
             : '<p class="sub" style="margin-top:10px">Nada vencido con proveedores. ¡Bien!</p>') +
           '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'cuentas\')">Ver cuentas claras</button></p></section>';
         h += "</div>";
+
+        /* Franja de Cabezales (como en la maqueta aprobada) */
+        h += '<section class="card ic-sol-naranja" style="margin-top:18px"><div class="band-head"><h3>' + icon("display") + 'Cabezales</h3>' +
+          '<span class="count-pill">' + state.cabezales.length + (state.cabezales.length === 1 ? " INTERESADO" : " INTERESADOS") + '</span></div>' +
+          '<p class="sub" style="margin-top:8px">Proveedores interesados en cabezales en las sedes.</p>' +
+          (state.cabezales.length
+            ? '<div class="prov-chips">' + state.cabezales.map(function (c) {
+                return '<span class="prov-chip">' + esc(c.proveedor) + (c.notas ? ' <b>(' + esc(c.notas) + ")</b>" : "") + "</span>";
+              }).join("") + "</div>"
+            : '<p class="sub" style="margin:10px 0 0">Todavía no hay proveedores registrados.</p>') +
+          '<p style="margin:14px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'cabezales\')">Ver cabezales</button></p></section>';
 
         /* Equipo */
         h += '<h2 class="section-title">' + icon("users") + 'Equipo</h2><div class="card"><div class="team-layout">' +
@@ -858,7 +978,7 @@
         /* Torta (donut) con el porcentaje en el centro */
         h += '<div class="donut-wrap" role="img" aria-label="Avance del ' + esc(fmtPct(d.pct)) + ' hacia la meta">' +
           '<svg class="ring" viewBox="0 0 120 120" aria-hidden="true">' +
-          '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="var(--surface-2)" stroke-width="13"></circle>' +
+          '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="var(--donut-track)" stroke-width="13"></circle>' +
           '<circle cx="60" cy="60" r="' + R + '" fill="none" stroke="var(--brand)" stroke-width="13" stroke-linecap="round" stroke-dasharray="' + dash + ' ' + C.toFixed(2) + '"></circle>' +
           '</svg>' +
           '<div class="donut-center"><div class="donut-pct">' + esc(fmtPct(d.pct)) + '</div><div class="donut-label">de la meta</div></div></div>';
@@ -939,11 +1059,11 @@
         var done = state.ingles.filter(function (i) { return i.completado; }).length;
         var pct = total ? Math.round((done / total) * 100) : 0;
         var h = modHead("Módulo de Inglés", "El plan del equipo para aprender inglés: cada quien marca lo que ya hizo y el avance se ve al instante.", newBtn("Agregar ítem", "openInglesForm()"));
-        h += '<section class="card" style="margin-bottom:16px"><h3>' + icon("book") + "Avance del equipo</h3>" +
+        h += '<section class="card ic-sol-carbon" style="margin-bottom:16px"><h3>' + icon("book") + "Avance del equipo</h3>" +
           '<div class="stat-row"><div class="st"><b>' + pct + '%</b><span>Completado</span></div>' +
           '<div class="st"><b>' + done + '</b><span>Hechos</span></div>' +
           '<div class="st"><b>' + (total - done) + '</b><span>Por hacer</span></div></div>' +
-          '<div class="bar" style="height:16px"><i class="ok-fill" style="width:' + pct + '%"></i></div>' +
+          '<div class="bar" style="height:14px"><i style="width:' + pct + '%"></i></div>' +
           '<div class="bar-legend"><span>' + done + " de " + total + " ítems completados</span></div></section>";
         if (!total) {
           h += '<div class="card"><p class="sub" style="margin:0">El checklist está vacío. Agrega el primer ítem del plan con el botón «Agregar ítem»: una lección, una práctica, un video por ver…</p></div>';
@@ -1019,7 +1139,7 @@
       function viewCabezales() {
         var h = modHead("Interesados en cabezales", "Proveedores interesados en contratar cabezales en las sedes.", newBtn("Agregar proveedor", "openCabezalForm()"));
         h += '<div class="grid-cards" style="margin-bottom:4px">' +
-          '<section class="card"><h3>' + icon("display") + 'Interesados</h3><div class="big-num">' + state.cabezales.length + '</div><div class="sub">' + (state.cabezales.length === 1 ? "proveedor interesado en cabezales" : "proveedores interesados en cabezales") + '</div></section></div>';
+          '<section class="card ic-sol-naranja"><h3>' + icon("display") + 'Interesados</h3><div class="big-num">' + state.cabezales.length + '</div><div class="sub">' + (state.cabezales.length === 1 ? "proveedor interesado en cabezales" : "proveedores interesados en cabezales") + '</div></section></div>';
         if (!state.cabezales.length) {
           h += '<div class="card" style="margin-top:16px"><p class="sub" style="margin:0">Todavía no hay proveedores registrados. Agrega el primero con el botón «Agregar proveedor».</p></div>';
           return h;
@@ -1027,7 +1147,7 @@
         h += '<h2 class="section-title">' + icon("display") + "Proveedores (" + state.cabezales.length + ')</h2><div class="list">' +
           state.cabezales.map(function (c) {
             return '<div class="row-card"><div class="grow"><div class="t">' + esc(c.proveedor) + "</div>" +
-              (c.notas ? '<div class="meta"><span class="chip chip-tipo">' + esc(c.notas) + "</span></div>" : "") + "</div>" +
+              (c.notas ? '<div class="meta"><span class="chip chip-nota">(' + esc(c.notas) + ")</span></div>" : "") + "</div>" +
               '<div class="actions">' +
               '<button type="button" class="icon-btn" onclick="openCabezalForm(\'' + c.id + "')\">" + icon("pencil") + "Editar</button>" +
               '<button type="button" class="icon-btn" onclick="deleteCabezal(\'' + c.id + "')\">" + icon("trash") + "Eliminar</button></div></div>";
