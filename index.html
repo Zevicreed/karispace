@@ -925,12 +925,15 @@
             : '') +
           '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'sorteos\')">Ver sorteos</button></p></section>';
         /* Actividades */
+        var anivAcum = aportesSuma("aniversarios");
         h += '<section class="card ic-sol-amarillo"><h3>' + icon("calendar") + 'Actividades</h3>' +
           '<div class="stat-row"><div class="st"><b>' + actActivas.length + '</b><span>Activas</span></div>' +
           '<div class="st"><b>' + actProximas.length + '</b><span>Próximas</span></div></div>' +
           (actProximas.length
             ? '<p class="sub" style="margin-top:10px">La más cercana: <strong style="color:var(--ink)">' + esc(actProximas[0].nombre) + "</strong> · " + esc(fmtDate(actProximas[0].fecha_inicio)) + "</p>"
             : '<p class="sub" style="margin-top:10px">No hay actividades próximas registradas.</p>') +
+          '<div class="mega"><div class="mega-t">Aniversarios <span>· Fondo general</span></div>' +
+          '<div class="mega-datos"><span style="font-family:\'Anton\',sans-serif;font-size:24px;letter-spacing:.02em;color:var(--ink)">' + esc(fmtMoney(anivAcum)) + '</span><br>acumulados en notas de crédito de proveedores</div></div>' +
           '<p style="margin:12px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="goModule(\'actividades\')">Ver actividades</button></p></section>';
         /* Inglés */
         h += '<section class="card ic-sol-carbon"><h3>' + icon("book") + 'Inglés del equipo</h3>' +
