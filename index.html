@@ -308,6 +308,12 @@
       .meta-mini-bar { height: 8px; border-radius: 99px; background: var(--track); overflow: hidden; margin-top: 10px; }
       .meta-mini-bar > i { display: block; height: 100%; border-radius: 99px; background: linear-gradient(90deg, var(--yellow), var(--brand)); }
 
+      /* ---------- Actividades por sede dentro de cada aniversario ---------- */
+      .sede-acts { flex: 1 1 100%; border-top: 1px solid var(--line); padding-top: 11px; margin-top: 2px; }
+      .sede-act-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+      .sede-act-row .sa-txt { flex: 1; min-width: 160px; font-size: 14px; }
+      .sede-act-row .actions { display: flex; gap: 6px; flex-wrap: wrap; }
+
       /* ---------- Lista estructurada de aportes ---------- */
       .aportes { flex: 1 1 100%; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 11px; }
       .aportes-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin-bottom: 4px; }
@@ -570,7 +576,7 @@
 
       /* ================= Estado ================= */
       var state = {
-        miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [], aportes: [], cabezales: [],
+        miembros: [], actividades: [], sorteos: [], ingles: [], cuentas: [], cuentasInfo: [], aportes: [], cabezales: [], anivActs: [],
         configuracion: {},
         loaded: false
       };
@@ -719,6 +725,39 @@
             ? '<div class="aportes-total"><span>' + esc(totalLabel) + '</span><span class="ap-total-monto">' + esc(fmtMoney(total)) + "</span></div>"
             : "") + "</div>";
       }
+      /* ---------- Actividades por sede de aniversarios (tabla aniversario_actividades) ---------- */
+      var SEDES_ANIV = ["La Mata", "Venrol", "Traki"];
+      function sedeDeAniversario(a) {
+        var n = String((a && a.nombre) || "").toLowerCase();
+        for (var i = 0; i < SEDES_ANIV.length; i++) {
+          if (n.indexOf(SEDES_ANIV[i].toLowerCase()) !== -1) return SEDES_ANIV[i];
+        }
+        return String((a && a.nombre) || "").replace(/aniversario/i, "").trim() || "esta sede";
+      }
+      function anivActsDe(sede) {
+        var s = String(sede || "").trim().toLowerCase();
+        return (state.anivActs || []).filter(function (x) {
+          return x && String(x.sede || "").trim().toLowerCase() === s;
+        });
+      }
+      function esAniversario(a) {
+        return String((a && a.nombre) || "").toLowerCase().indexOf("aniversario") !== -1;
+      }
+      /* Bloque dentro de la tarjeta de cada sede: su lista propia de actividades. */
+      function sedeActsHtml(sede) {
+        var list = anivActsDe(sede);
+        var body = list.length
+          ? list.map(function (x) {
+              return '<div class="sede-act-row"><div class="sa-txt"><b>' + esc(x.proveedor) + "</b>" +
+                (x.actividad ? " · " + esc(x.actividad) : "") + "</div>" +
+                '<div class="actions">' +
+                '<button type="button" class="icon-btn" onclick="openAnivActForm(\'' + esc(sede) + "','" + x.id + "')\">" + icon("pencil") + "Editar</button>" +
+                '<button type="button" class="icon-btn" onclick="deleteAnivAct(\'' + x.id + "')\">" + icon("trash") + "Eliminar</button></div></div>";
+            }).join("")
+          : '<p class="sub" style="margin:2px 0 0">Sin actividades registradas todavía.</p>';
+        return '<div class="sede-acts"><div class="aportes-title">Actividades en ' + esc(sede) + "</div>" + body +
+          '<p style="margin:10px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="openAnivActForm(\'' + esc(sede) + "')\">" + icon("plus") + "Agregar actividad</button></p></div>";
+      }
       function megaSorteoDatos() {
         var meta = configNum("meta_sorteo");
         if (meta === null || !(meta > 0)) return null;
@@ -772,7 +811,9 @@
           api("cuentas?select=*&order=fecha_compromiso.asc.nullslast,created_at.desc"),
           api("configuracion?select=*").catch(function () { return []; }),
           api("aportes?select=*&order=created_at.asc").catch(function () { return []; }),
-          api("cabezales_interesados?select=*&order=proveedor.asc").catch(function () { return []; })
+          api("cabezales_interesados?select=*&order=proveedor.asc").catch(function () { return []; }),
+          api("aniversario_actividades?select=*&order=created_at.asc").catch(function () { return []; }),
+          api("cuentas_info?select=*&order=fecha.desc.nullslast,created_at.desc").catch(function () { return []; })
         ]).then(function (r) {
           state.miembros = r[0] || [];
           state.actividades = r[1] || [];
@@ -782,6 +823,8 @@
           state.configuracion = parseConfig(r[5] || []);
           state.aportes = r[6] || [];
           state.cabezales = r[7] || [];
+          state.anivActs = r[8] || [];
+          state.cuentasInfo = r[9] || [];
           state.loaded = true;
           hideBanner();
           render();
@@ -1043,24 +1086,34 @@
       function viewActividades() {
         var h = modHead("Actividades", "Las actividades y campañas del equipo, con sus fechas y estado.", newBtn("Nueva actividad", "openActividadForm()"));
         if (!state.actividades.length) { h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay actividades. Crea la primera con el botón de arriba.</p></div>'; return h; }
-        /* Los aportes de aniversarios son un fondo común: se muestran una sola vez,
-           en la tarjeta del aniversario más próximo (menor fecha_inicio). */
-        var anivs = state.actividades.filter(function (x) {
-          return String(x.nombre || "").toLowerCase().indexOf("aniversario") !== -1;
-        }).slice().sort(function (a, b) {
-          return String(a.fecha_inicio || "9999-12-31").localeCompare(String(b.fecha_inicio || "9999-12-31"));
-        });
-        var anivPrincipalId = anivs.length ? anivs[0].id : null;
-        var anivNota = anivs.length > 1 ? "Cubren los " + anivs.length + " aniversarios" : "";
-        h += '<div class="list">' + state.actividades.map(function (a) {
+        function actCard(a, extra) {
           return '<div class="row-card">' + (a.fecha_inicio ? dateBadge(a.fecha_inicio) : "") +
             '<div class="grow"><div class="t">' + esc(a.nombre) + "</div>" +
             (a.descripcion ? '<div class="d">' + esc(a.descripcion) + "</div>" : "") +
             '<div class="meta"><span class="date-txt">' + icon("calendar") + esc(fmtDate(a.fecha_inicio)) + (a.fecha_fin ? " → " + esc(fmtDate(a.fecha_fin)) : " · sin fecha de cierre") + '</span>' +
             '<span class="chip chip-' + esc(a.estado) + '">' + esc(cap(a.estado)) + "</span></div></div>" +
             '<button type="button" class="icon-btn" onclick="openActividadForm(\'' + a.id + "')\">" + icon("pencil") + "Editar</button>" +
-            (anivPrincipalId !== null && String(a.id) === String(anivPrincipalId) ? aportesListHtml("aniversarios", "Total en notas", anivNota) : "") + "</div>";
-        }).join("") + "</div>";
+            (extra || "") + "</div>";
+        }
+        var anivs = state.actividades.filter(esAniversario);
+        var otras = state.actividades.filter(function (a) { return !esAniversario(a); });
+        if (otras.length) {
+          h += '<div class="list">' + otras.map(function (a) { return actCard(a, ""); }).join("") + "</div>";
+        }
+        if (anivs.length) {
+          /* Sección «Aniversarios»: primero el fondo general de aportes (único por
+             proveedor, no por sede) y debajo las tres tarjetas de sede, cada una
+             con sus propias actividades. */
+          h += '<h2 class="section-title">' + icon("calendar") + "Aniversarios</h2>";
+          h += '<section class="card" style="margin-bottom:14px"><h3>' + icon("gift") + "Aporte general para aniversarios</h3>" +
+            '<p class="sub" style="margin-top:6px">Aporte único por proveedor, para cubrir los gastos de las actividades de los tres aniversarios.</p>' +
+            (aportesListHtml("aniversarios", "Total en notas") ||
+              '<p class="sub" style="margin:10px 0 0">Todavía no hay aportes registrados.</p>') +
+            "</section>";
+          h += '<div class="list">' + anivs.map(function (a) {
+            return actCard(a, sedeActsHtml(sedeDeAniversario(a)));
+          }).join("") + "</div>";
+        }
         return h;
       }
 
@@ -1138,6 +1191,26 @@
         if (pend.length) h += '<h2 class="section-title">' + icon("clock") + "Pendientes (" + pend.length + ')</h2><div class="list">' + pend.map(cuentaCard).join("") + "</div>";
         else h += '<div class="card" style="margin-top:16px"><p class="sub" style="margin:0">No hay pendientes con proveedores. Cuando surja un correo, una reunión o una llamada por hacer, regístralo con «Nuevo pendiente».</p></div>';
         if (hechas.length) h += '<h2 class="section-title">' + icon("check") + "Hechos (" + hechas.length + ')</h2><div class="list">' + hechas.map(cuentaCard).join("") + "</div>";
+        /* ---------- Información importante por proveedor (tabla cuentas_info) ---------- */
+        h += '<div style="display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap">' +
+          '<h2 class="section-title" style="flex:1;min-width:220px;margin-bottom:0">' + icon("book") + "Información importante</h2>" +
+          '<button type="button" class="btn btn-primary btn-small" onclick="openCuentasInfoForm()">' + icon("plus") + "Nueva información</button></div>" +
+          '<p class="sub" style="margin:8px 0 14px;color:var(--ink-2);font-size:13.5px;font-weight:500;max-width:640px">Notas que envían los proveedores, lo generado con los de contratos especiales y los datos clave que hay que tener a la mano.</p>';
+        if (state.cuentasInfo.length) {
+          h += '<div class="list">' + state.cuentasInfo.map(function (r) {
+            return '<div class="row-card"><div class="grow"><div class="t">' + esc(r.proveedor) + "</div>" +
+              (r.titulo ? '<div class="d" style="color:var(--ink);font-weight:700;font-size:14.5px;margin-top:2px">' + esc(r.titulo) + "</div>" : "") +
+              (r.detalle ? '<div class="d" style="margin-top:4px">' + esc(r.detalle) + "</div>" : "") +
+              '<div class="meta">' +
+              (r.tipo ? '<span class="chip chip-tipo">' + esc(r.tipo) + "</span>" : "") +
+              (r.fecha ? '<span class="date-txt">' + icon("calendar") + esc(fmtDate(r.fecha)) + "</span>" : "") + "</div></div>" +
+              '<div class="actions">' +
+              '<button type="button" class="icon-btn" onclick="openCuentasInfoForm(\'' + r.id + "')\">" + icon("pencil") + "Editar</button>" +
+              '<button type="button" class="icon-btn" onclick="deleteCuentasInfo(\'' + r.id + "')\">" + icon("trash") + "Eliminar</button></div></div>";
+          }).join("") + "</div>";
+        } else {
+          h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay información guardada. Cuando un proveedor envíe una nota importante o haya un dato clave de un contrato, regístralo con «Nueva información».</p></div>';
+        }
         return h;
       }
       function setCuentaEstado(id, estado) {
@@ -1364,6 +1437,44 @@
         });
       }
 
+      var TIPOS_INFO = ["Nota de crédito", "Contrato especial", "Generado", "Dato"];
+      function openCuentasInfoForm(id) {
+        var r = id ? state.cuentasInfo.find(function (x) { return String(x.id) === String(id); }) : null;
+        var proveedores = [];
+        state.cuentas.forEach(function (x) { if (x.proveedor && proveedores.indexOf(x.proveedor) === -1) proveedores.push(x.proveedor); });
+        state.cuentasInfo.forEach(function (x) { if (x.proveedor && proveedores.indexOf(x.proveedor) === -1) proveedores.push(x.proveedor); });
+        var tipos = TIPOS_INFO.slice();
+        if (r && r.tipo && tipos.indexOf(r.tipo) === -1) tipos.push(r.tipo);
+        showForm({
+          title: r ? "Editar información" : "Nueva información importante",
+          hint: "Guarda aquí las notas que envían los proveedores y lo generado con los de contratos especiales (ej.: el plan de Alimentos Polar), para tenerlo siempre a la mano.",
+          values: r || { tipo: "Nota de crédito", fecha: todayISO() },
+          fields: [
+            { name: "proveedor", label: "Proveedor *", type: "text", ph: "Ej.: Alimentos Polar", datalist: proveedores },
+            { name: "tipo", label: "Tipo", type: "select", half: true, options: tipos.map(function (t) { return { value: t, label: t }; }) },
+            { name: "fecha", label: "Fecha", type: "date", half: true },
+            { name: "titulo", label: "Título *", type: "text", ph: "Ej.: Plan comercial Alimentos Polar" },
+            { name: "detalle", label: "Detalle", type: "textarea", ph: "El dato completo: montos, porcentajes, condiciones… (opcional)" }
+          ],
+          onSubmit: function (v) {
+            if (!v.proveedor) return Promise.reject(new Error("Indica el proveedor."));
+            if (!v.titulo) return Promise.reject(new Error("La información necesita un título."));
+            var payload = { proveedor: v.proveedor, tipo: v.tipo || "Dato", titulo: v.titulo, detalle: v.detalle, fecha: v.fecha };
+            return r ? apiUpdate("cuentas_info", r.id, payload) : apiCreate("cuentas_info", payload);
+          },
+          onDelete: r ? function () { return apiDelete("cuentas_info", r.id); } : null
+        });
+      }
+      function deleteCuentasInfo(id) {
+        var r = state.cuentasInfo.find(function (x) { return String(x.id) === String(id); });
+        if (!r) return;
+        confirmDelete(r.titulo || r.proveedor || "esta información", function () {
+          apiDelete("cuentas_info", id)
+            .then(function () { closeModal(); toast("Eliminado"); return loadAll(true); })
+            .catch(function (err) { closeModal(); toast("No se pudo eliminar: " + err.message, true); });
+        });
+      }
+
       function openCabezalForm(id) {
         var c = id ? state.cabezales.find(function (x) { return String(x.id) === String(id); }) : null;
         showForm({
@@ -1380,6 +1491,35 @@
             return c ? apiUpdate("cabezales_interesados", c.id, payload) : apiCreate("cabezales_interesados", payload);
           },
           onDelete: c ? function () { return apiDelete("cabezales_interesados", c.id); } : null
+        });
+      }
+
+      function openAnivActForm(sede, id) {
+        var x = id ? state.anivActs.find(function (r) { return String(r.id) === String(id); }) : null;
+        showForm({
+          title: (x ? "Editar actividad" : "Agregar actividad") + " · " + sede,
+          hint: "Las actividades de los aniversarios (degustaciones, impulsos…) se registran por sede, porque no todos los proveedores las harán en las tres. La sede sale de la tarjeta donde la agregas.",
+          values: x || {},
+          fields: [
+            { name: "proveedor", label: "Proveedor *", type: "text", ph: "Ej.: Alivensa" },
+            { name: "actividad", label: "Actividad *", type: "text", ph: "Ej.: Degustación" }
+          ],
+          onSubmit: function (v) {
+            if (!v.proveedor) return Promise.reject(new Error("Indica el proveedor."));
+            if (!v.actividad) return Promise.reject(new Error("Indica la actividad."));
+            var payload = { sede: sede, proveedor: v.proveedor, actividad: v.actividad };
+            return x ? apiUpdate("aniversario_actividades", x.id, payload) : apiCreate("aniversario_actividades", payload);
+          },
+          onDelete: x ? function () { return apiDelete("aniversario_actividades", x.id); } : null
+        });
+      }
+      function deleteAnivAct(id) {
+        var x = state.anivActs.find(function (r) { return String(r.id) === String(id); });
+        if (!x) return;
+        confirmDelete(((x.proveedor || "") + " — " + (x.actividad || "")).trim(), function () {
+          apiDelete("aniversario_actividades", id)
+            .then(function () { closeModal(); toast("Eliminado"); return loadAll(true); })
+            .catch(function (err) { closeModal(); toast("No se pudo eliminar: " + err.message, true); });
         });
       }
 
