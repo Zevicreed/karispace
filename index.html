@@ -311,6 +311,7 @@
       /* ---------- Lista estructurada de aportes ---------- */
       .aportes { flex: 1 1 100%; margin-top: 12px; border-top: 1px solid var(--line); padding-top: 11px; }
       .aportes-title { font-size: 11.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-2); margin-bottom: 4px; }
+      .aportes-sub { font-size: 13px; font-weight: 600; color: var(--ink-2); margin: 0 0 6px; }
       .aporte-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; padding: 7px 0; border-bottom: 1px dashed var(--line); }
       .aporte-row .ap-name { flex: 1; min-width: 170px; font-weight: 600; font-size: 14px; }
       .aporte-row .ap-monto { font-family: "Anton", sans-serif; font-weight: 400; font-size: 16px; letter-spacing: .02em; white-space: nowrap; }
@@ -699,7 +700,7 @@
         }, 0);
       }
       /* Lista limpia: nombre a la izquierda, tipo, y a la derecha el monto o «En especie». */
-      function aportesListHtml(destino, totalLabel) {
+      function aportesListHtml(destino, totalLabel, nota) {
         var list = aportesDe(destino);
         if (!list.length) return "";
         var rows = list.map(function (a) {
@@ -712,7 +713,8 @@
               : '<span class="chip chip-especie">En especie</span>') + "</div>";
         }).join("");
         var total = aportesSuma(destino);
-        return '<div class="aportes"><div class="aportes-title">Aportes de proveedores</div>' + rows +
+        return '<div class="aportes"><div class="aportes-title">Aportes de proveedores</div>' +
+          (nota ? '<p class="aportes-sub">' + esc(nota) + "</p>" : "") + rows +
           (total > 0
             ? '<div class="aportes-total"><span>' + esc(totalLabel) + '</span><span class="ap-total-monto">' + esc(fmtMoney(total)) + "</span></div>"
             : "") + "</div>";
@@ -1041,6 +1043,15 @@
       function viewActividades() {
         var h = modHead("Actividades", "Las actividades y campañas del equipo, con sus fechas y estado.", newBtn("Nueva actividad", "openActividadForm()"));
         if (!state.actividades.length) { h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay actividades. Crea la primera con el botón de arriba.</p></div>'; return h; }
+        /* Los aportes de aniversarios son un fondo común: se muestran una sola vez,
+           en la tarjeta del aniversario más próximo (menor fecha_inicio). */
+        var anivs = state.actividades.filter(function (x) {
+          return String(x.nombre || "").toLowerCase().indexOf("aniversario") !== -1;
+        }).slice().sort(function (a, b) {
+          return String(a.fecha_inicio || "9999-12-31").localeCompare(String(b.fecha_inicio || "9999-12-31"));
+        });
+        var anivPrincipalId = anivs.length ? anivs[0].id : null;
+        var anivNota = anivs.length > 1 ? "Cubren los " + anivs.length + " aniversarios" : "";
         h += '<div class="list">' + state.actividades.map(function (a) {
           return '<div class="row-card">' + (a.fecha_inicio ? dateBadge(a.fecha_inicio) : "") +
             '<div class="grow"><div class="t">' + esc(a.nombre) + "</div>" +
@@ -1048,7 +1059,7 @@
             '<div class="meta"><span class="date-txt">' + icon("calendar") + esc(fmtDate(a.fecha_inicio)) + (a.fecha_fin ? " → " + esc(fmtDate(a.fecha_fin)) : " · sin fecha de cierre") + '</span>' +
             '<span class="chip chip-' + esc(a.estado) + '">' + esc(cap(a.estado)) + "</span></div></div>" +
             '<button type="button" class="icon-btn" onclick="openActividadForm(\'' + a.id + "')\">" + icon("pencil") + "Editar</button>" +
-            (String(a.nombre || "").toLowerCase().indexOf("aniversario") !== -1 ? aportesListHtml("aniversarios", "Total en notas") : "") + "</div>";
+            (anivPrincipalId !== null && String(a.id) === String(anivPrincipalId) ? aportesListHtml("aniversarios", "Total en notas", anivNota) : "") + "</div>";
         }).join("") + "</div>";
         return h;
       }
