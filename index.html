@@ -708,7 +708,6 @@
       /* Lista limpia: nombre a la izquierda, tipo, y a la derecha el monto o «En especie». */
       function aportesListHtml(destino, totalLabel, nota) {
         var list = aportesDe(destino);
-        if (!list.length) return "";
         var rows = list.map(function (a) {
           var m = (a.monto === null || a.monto === undefined || a.monto === "") ? null : Number(a.monto);
           var tieneMonto = m !== null && !isNaN(m);
@@ -720,10 +719,12 @@
         }).join("");
         var total = aportesSuma(destino);
         return '<div class="aportes"><div class="aportes-title">Aportes de proveedores</div>' +
-          (nota ? '<p class="aportes-sub">' + esc(nota) + "</p>" : "") + rows +
+          (nota ? '<p class="aportes-sub">' + esc(nota) + "</p>" : "") +
+          (list.length ? rows : '<p class="aportes-sub" style="margin:0">Todavía no hay aportes registrados.</p>') +
           (total > 0
             ? '<div class="aportes-total"><span>' + esc(totalLabel) + '</span><span class="ap-total-monto">' + esc(fmtMoney(total)) + "</span></div>"
-            : "") + "</div>";
+            : "") +
+          '<p style="margin:10px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="openAporteForm(\'' + esc(destino) + "')\">" + icon("plus") + "Añadir proveedor</button></p></div>";
       }
       /* ---------- Actividades por sede de aniversarios (tabla aniversario_actividades) ---------- */
       var SEDES_ANIV = ["La Mata", "Venrol", "Traki"];
@@ -1110,8 +1111,7 @@
           h += '<h2 class="section-title">' + icon("calendar") + "Aniversarios</h2>";
           h += '<section class="card" style="margin-bottom:14px"><h3>' + icon("gift") + "Aporte general para aniversarios</h3>" +
             '<p class="sub" style="margin-top:6px">Aporte único por proveedor, para cubrir los gastos de las actividades de los tres aniversarios.</p>' +
-            (aportesListHtml("aniversarios", "Total en notas") ||
-              '<p class="sub" style="margin:10px 0 0">Todavía no hay aportes registrados.</p>') +
+            aportesListHtml("aniversarios", "Total en notas") +
             "</section>";
           h += '<div class="list">' + anivs.map(function (a) {
             return actCard(a, sedeActsHtml(sedeDeAniversario(a)));
@@ -1516,6 +1516,38 @@
           onDelete: x ? function () { return apiDelete("aniversario_actividades", x.id); } : null
         });
       }
+      /* ---------- Añadir proveedor con aporte (tabla aportes) ---------- */
+      var TIPOS_APORTE = ["Nota de crédito", "Aporte", "Degustación", "Impulso", "Obsequios", "Degustación e impulso", "Degustación y obsequios", "Impulso y degustación", "Impulso y obsequios", "Degustación, premios y actividades"];
+      function openAporteForm(destino) {
+        var esMega = destino === "megasorteo";
+        var proveedores = [];
+        [state.aportes, state.cuentas, state.cabezales].forEach(function (arr) {
+          (arr || []).forEach(function (x) { if (x && x.proveedor && proveedores.indexOf(x.proveedor) === -1) proveedores.push(x.proveedor); });
+        });
+        var tipos = TIPOS_APORTE.slice();
+        state.aportes.forEach(function (x) { if (x.tipo && tipos.indexOf(x.tipo) === -1) tipos.push(x.tipo); });
+        showForm({
+          title: "Añadir proveedor · " + (esMega ? "Mega Sorteo" : "Aniversarios"),
+          hint: "Registra el aporte del proveedor en esta lista. Si dejas el monto vacío, queda guardado como aporte en especie.",
+          values: { tipo: esMega ? "Aporte" : "Nota de crédito" },
+          fields: [
+            { name: "proveedor", label: "Proveedor *", type: "text", ph: "Ej.: Nombre del proveedor o marca", datalist: proveedores },
+            { name: "tipo", label: "Tipo de aporte", type: "select", options: tipos.map(function (t) { return { value: t, label: t }; }) },
+            { name: "monto", label: "Monto en $ (opcional)", type: "number", ph: "Ej.: 150 — vacío = en especie" }
+          ],
+          onSubmit: function (v) {
+            if (!v.proveedor) return Promise.reject(new Error("Indica el proveedor."));
+            var monto = null;
+            if (v.monto !== null && v.monto !== undefined && String(v.monto).trim() !== "") {
+              monto = Number(String(v.monto).replace(",", "."));
+              if (isNaN(monto) || monto < 0) return Promise.reject(new Error("El monto debe ser un número válido (ej.: 150)."));
+            }
+            var payload = { destino: destino, proveedor: v.proveedor, tipo: v.tipo || null, monto: monto };
+            return apiCreate("aportes", payload);
+          }
+        });
+      }
+
       function deleteAnivAct(id) {
         var x = state.anivActs.find(function (r) { return String(r.id) === String(id); });
         if (!x) return;
