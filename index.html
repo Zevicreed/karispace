@@ -324,6 +324,12 @@
       .chip-especie { background: var(--cream); color: #8A4B00; border: 1px solid var(--cream-line); }
       .aportes-total { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-top: 9px; font-weight: 700; font-size: 14.5px; }
       .aportes-total .ap-total-monto { font-family: "Anton", sans-serif; font-weight: 400; font-size: 18px; letter-spacing: .02em; color: var(--brand-ink); white-space: nowrap; }
+      .aporte-row .aporte-del { padding: 5px 7px; border-color: transparent; background: transparent; color: var(--ink-2); flex-shrink: 0; }
+      .aporte-row .aporte-del:hover { border-color: var(--bad); color: var(--bad); background: var(--bad-soft); }
+      .aporte-row .aporte-del svg { width: 15px; height: 15px; }
+      .aporte-confirm { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; width: 100%; }
+      .aporte-confirm .ac-txt { flex: 1; min-width: 150px; font-weight: 700; font-size: 14px; color: var(--bad); }
+      .aporte-confirm .btn-danger { background: var(--bad); color: #FFFFFF; }
       @media (max-width: 640px) {
         .meta-layout { flex-direction: column; gap: 18px; }
         .meta-details { width: 100%; min-width: 0; }
@@ -711,11 +717,12 @@
         var rows = list.map(function (a) {
           var m = (a.monto === null || a.monto === undefined || a.monto === "") ? null : Number(a.monto);
           var tieneMonto = m !== null && !isNaN(m);
-          return '<div class="aporte-row"><span class="ap-name">' + esc(a.proveedor) + "</span>" +
+          return '<div class="aporte-row" data-aporte-id="' + esc(a.id) + '"><span class="ap-name">' + esc(a.proveedor) + "</span>" +
             (a.tipo ? '<span class="chip chip-tipo">' + esc(a.tipo) + "</span>" : "") +
             (tieneMonto
               ? '<span class="ap-monto">' + esc(fmtMoney(m)) + "</span>"
-              : '<span class="chip chip-especie">En especie</span>') + "</div>";
+              : '<span class="chip chip-especie">En especie</span>') +
+            '<button type="button" class="icon-btn aporte-del" title="Eliminar" aria-label="Eliminar" onclick="askDeleteAporte(\'' + esc(a.id) + "')\">" + icon("trash") + "</button></div>";
         }).join("");
         var total = aportesSuma(destino);
         return '<div class="aportes"><div class="aportes-title">Aportes de proveedores</div>' +
@@ -725,6 +732,23 @@
             ? '<div class="aportes-total"><span>' + esc(totalLabel) + '</span><span class="ap-total-monto">' + esc(fmtMoney(total)) + "</span></div>"
             : "") +
           '<p style="margin:10px 0 0"><button type="button" class="btn btn-ghost btn-small" onclick="openAporteForm(\'' + esc(destino) + "')\">" + icon("plus") + "Añadir proveedor</button></p></div>";
+      }
+      function askDeleteAporte(id) {
+        var a = (state.aportes || []).find(function (x) { return String(x.id) === String(id); });
+        if (!a) return;
+        var row = document.querySelector('[data-aporte-id="' + id + '"]');
+        if (!row) return;
+        row.innerHTML = '<div class="aporte-confirm"><span class="ac-txt">¿Eliminar a ' + esc(a.proveedor) + "?</span>" +
+          '<button type="button" class="btn btn-danger btn-small" onclick="confirmDeleteAporte(\'' + esc(a.id) + "')\">Confirmar</button>" +
+          '<button type="button" class="btn btn-ghost btn-small" onclick="cancelDeleteAporte()">Cancelar</button></div>';
+      }
+      function cancelDeleteAporte() {
+        render();
+      }
+      function confirmDeleteAporte(id) {
+        return apiDelete("aportes", id)
+          .then(function () { toast("Eliminado"); return loadAll(true); })
+          .catch(function (err) { showBanner("err", "No se pudo eliminar: " + err.message); render(); });
       }
       /* ---------- Actividades por sede de aniversarios (tabla aniversario_actividades) ---------- */
       var SEDES_ANIV = ["La Mata", "Venrol", "Traki"];
