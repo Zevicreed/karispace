@@ -625,7 +625,8 @@
         check: '<path d="m4 12.5 5 5L20 6.5"/>',
         undo: '<path d="M9 14 4 9l5-5"/><path d="M4 9h10a6 6 0 0 1 0 12h-3"/>',
         gift: '<rect x="3" y="8" width="18" height="4"/><path d="M12 8v13"/><path d="M19 12v7a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2v-7"/><path d="M7.5 8a2.5 2.5 0 0 1 0-5C11 3 12 8 12 8s1-5 4.5-5a2.5 2.5 0 0 1 0 5"/>',
-        display: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 9v12M16 9v12"/><path d="M8 15h8"/>'
+        display: '<rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18"/><path d="M8 9v12M16 9v12"/><path d="M8 15h8"/>',
+        download: '<path d="M12 3v11"/><path d="m6.5 9.5 5.5 5.5 5.5-5.5"/><path d="M4 21h16"/>'
       };
       function icon(name, cls) {
         return '<svg class="' + (cls || "") + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + (ICONS[name] || "") + "</svg>";
@@ -1072,7 +1073,8 @@
 
       /* ================= Vista: Sorteos ================= */
       function viewSorteos() {
-        var h = modHead("Sorteos", "Los sorteos que el equipo tiene pendientes por realizar y el registro de los ya hechos.", newBtn("Nuevo sorteo", "openSorteoForm()"));
+        var h = modHead("Sorteos", "Los sorteos que el equipo tiene pendientes por realizar y el registro de los ya hechos.",
+          '<span style="display:inline-flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-primary" onclick="descargarPdfSorteos()">' + icon("download") + "Descargar PDF</button>" + newBtn("Nuevo sorteo", "openSorteoForm()") + "</span>");
         h += megaSorteoProgressHtml();
         if (!state.sorteos.length) {
           h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay sorteos registrados. Crea el primero con el botón «Nuevo sorteo».</p></div>';
@@ -1112,7 +1114,8 @@
 
       /* ================= Vista: Actividades ================= */
       function viewActividades() {
-        var h = modHead("Actividades", "Las actividades y campañas del equipo, con sus fechas y estado.", newBtn("Nueva actividad", "openActividadForm()"));
+        var h = modHead("Actividades", "Las actividades y campañas del equipo, con sus fechas y estado.",
+          '<span style="display:inline-flex;gap:10px;flex-wrap:wrap"><button type="button" class="btn btn-primary" onclick="descargarPdfActividades()">' + icon("download") + "Descargar PDF</button>" + newBtn("Nueva actividad", "openActividadForm()") + "</span>");
         if (!state.actividades.length) { h += '<div class="card"><p class="sub" style="margin:0">Todavía no hay actividades. Crea la primera con el botón de arriba.</p></div>'; return h; }
         function actCard(a, extra) {
           return '<div class="row-card">' + (a.fecha_inicio ? dateBadge(a.fecha_inicio) : "") +
@@ -1580,6 +1583,356 @@
             .then(function () { closeModal(); toast("Eliminado"); return loadAll(true); })
             .catch(function (err) { closeModal(); toast("No se pudo eliminar: " + err.message, true); });
         });
+      }
+
+      /* ================= Descarga en PDF (generador propio en JS puro, sin librerías) =================
+         PDF mínimo hecho a mano: objetos, xref y flujos de contenido con la fuente
+         estándar Helvetica (codificación WinAnsi, para que los acentos salgan bien).
+         Los datos salen del estado ya cargado en pantalla; no se hacen consultas nuevas. */
+      function pdfClean(s) {
+        s = String(s === null || s === undefined ? "" : s);
+        s = s.replace(/[\u2018\u2019]/g, "'").replace(/[\u201C\u201D]/g, '"')
+          .replace(/[\u2013\u2014]/g, "-").replace(/\u2026/g, "...")
+          .replace(/\u2192/g, "->").replace(/\u2022/g, "-").replace(/\u00A0/g, " ");
+        var out = "";
+        for (var i = 0; i < s.length; i++) {
+          var c = s.charCodeAt(i);
+          if (c === 10 || c === 13 || c === 9) { out += " "; continue; }
+          if (c < 32) continue;
+          out += c > 255 ? "?" : s.charAt(i);
+        }
+        return out;
+      }
+      function pdfEsc(s) {
+        return s.replace(/\\/g, "\\\\").replace(/\(/g, "\\(").replace(/\)/g, "\\)");
+      }
+      /* Anchos de Helvetica (AFM, unidades por 1000) para medir y ajustar líneas */
+      var HELV_UP = { A: 667, B: 667, C: 722, D: 722, E: 667, F: 611, G: 778, H: 722, I: 278, J: 500, K: 667, L: 556, M: 833, N: 722, O: 778, P: 667, Q: 778, R: 722, S: 667, T: 611, U: 722, V: 667, W: 944, X: 667, Y: 667, Z: 611 };
+      var HELV_LO = { a: 556, b: 556, c: 500, d: 556, e: 556, f: 278, g: 556, h: 556, i: 222, j: 222, k: 500, l: 222, m: 833, n: 556, o: 556, p: 556, q: 556, r: 333, s: 500, t: 278, u: 556, v: 500, w: 722, x: 500, y: 500, z: 500 };
+      var HELV_SY = { " ": 278, "!": 333, '"': 355, "#": 556, "$": 556, "%": 889, "&": 667, "'": 222, "(": 333, ")": 333, "*": 389, "+": 584, ",": 278, "-": 333, ".": 278, "/": 278, ":": 278, ";": 278, "<": 584, "=": 584, ">": 584, "?": 611, "@": 1015, "[": 278, "\\": 278, "]": 278, "^": 469, "_": 556, "`": 333, "{": 334, "|": 260, "}": 334, "~": 584 };
+      var HELV_ACC = { "Á": "A", "É": "E", "Í": "I", "Ó": "O", "Ú": "U", "Ü": "U", "Ñ": "N", "á": "a", "é": "e", "í": "i", "ó": "o", "ú": "u", "ü": "u", "ñ": "n" };
+      function helvCharW(ch) {
+        if (ch >= "0" && ch <= "9") return 556;
+        if (HELV_UP[ch]) return HELV_UP[ch];
+        if (HELV_LO[ch]) return HELV_LO[ch];
+        if (HELV_ACC[ch]) { var b = HELV_ACC[ch]; return HELV_UP[b] || HELV_LO[b] || 556; }
+        if (HELV_SY[ch]) return HELV_SY[ch];
+        if (ch === "¡") return 333;
+        if (ch === "¿") return 611;
+        if (ch === "·") return 278;
+        if (ch === "«" || ch === "»") return 556;
+        return 556;
+      }
+      function helvW(str, size) {
+        var t = 0;
+        str = pdfClean(str);
+        for (var i = 0; i < str.length; i++) t += helvCharW(str.charAt(i));
+        return t * size / 1000;
+      }
+      function pdfNum(n) { return Math.round(n * 100) / 100; }
+      /* Ensambla el archivo PDF (bytes) a partir de los flujos de contenido de cada página */
+      function buildPdfBlob(pagesOps) {
+        var objects = [], pageIds = [], nextId = 5, i;
+        for (i = 0; i < pagesOps.length; i++) { pageIds.push(nextId, nextId + 1); nextId += 2; }
+        objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
+        var kids = [];
+        for (i = 0; i < pagesOps.length; i++) kids.push(pageIds[i * 2] + " 0 R");
+        objects[2] = "<< /Type /Pages /Kids [" + kids.join(" ") + "] /Count " + pagesOps.length + " >>";
+        objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>";
+        objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>";
+        pagesOps.forEach(function (ops, idx) {
+          var pid = pageIds[idx * 2], cid = pageIds[idx * 2 + 1];
+          objects[pid] = "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents " + cid + " 0 R >>";
+          objects[cid] = "<< /Length " + ops.length + " >>\nstream\n" + ops + "\nendstream";
+        });
+        var out = "%PDF-1.4\n", offsets = [], id;
+        for (id = 1; id < objects.length; id++) {
+          if (!objects[id]) continue;
+          offsets[id] = out.length;
+          out += id + " 0 obj\n" + objects[id] + "\nendobj\n";
+        }
+        var xrefPos = out.length, count = objects.length;
+        out += "xref\n0 " + count + "\n0000000000 65535 f \n";
+        for (id = 1; id < count; id++) {
+          var off = String(offsets[id] || 0);
+          while (off.length < 10) off = "0" + off;
+          out += off + " 00000 n \n";
+        }
+        out += "trailer\n<< /Size " + count + " /Root 1 0 R >>\nstartxref\n" + xrefPos + "\n%%EOF";
+        var bytes = new Uint8Array(out.length);
+        for (var k = 0; k < out.length; k++) bytes[k] = out.charCodeAt(k) & 0xFF;
+        return new Blob([bytes], { type: "application/pdf" });
+      }
+      /* Motor de layout: cursor vertical, ajuste de líneas, tablas y saltos de página */
+      function createPdfDoc() {
+        var W = 595, H = 842, M = 48, CW = W - 2 * M, BOTTOM = 54;
+        var ORANGE = "0.957 0.486 0.125", WHITE = "1 1 1", INK = "0.169 0.149 0.125",
+            GRAY = "0.443 0.384 0.310", BRANDINK = "0.541 0.243 0", LINEC = "0.914 0.875 0.808",
+            SOFT = "0.992 0.922 0.851";
+        var pages = [], ops = [], y = 0, pageNo = 0;
+        function op(s) { ops.push(s); }
+        function fill(c) { op(c + " rg"); }
+        function drawText(str, x, yy, font, size) {
+          op("BT /" + font + " " + size + " Tf 1 0 0 1 " + pdfNum(x) + " " + pdfNum(yy) + " Tm (" + pdfEsc(pdfClean(str)) + ") Tj ET");
+        }
+        function startPage() {
+          if (pageNo > 0) pages.push(ops.join("\n"));
+          ops = []; pageNo++;
+          if (pageNo === 1) {
+            fill(ORANGE); op("0 " + (H - 58) + " " + W + " 58 re f");
+            fill(WHITE); drawText("KariSpace · Hipermercado Kari", M, H - 37, "F2", 15);
+            y = H - 88;
+          } else {
+            fill(ORANGE); op("0 " + (H - 7) + " " + W + " 7 re f");
+            fill(GRAY); drawText("KariSpace · Hipermercado Kari", M, H - 32, "F1", 9);
+            y = H - 56;
+          }
+        }
+        function ensure(h) { if (y - h < BOTTOM) startPage(); }
+        function wrap(str, font, size, maxW) {
+          var words = pdfClean(str).split(/\s+/).filter(function (w) { return w.length; });
+          var lines = [], cur = "", factor = font === "F2" ? 1.03 : 1;
+          words.forEach(function (w) {
+            var test = cur ? cur + " " + w : w;
+            if (helvW(test, size) * factor <= maxW || !cur) cur = test;
+            else { lines.push(cur); cur = w; }
+          });
+          if (cur) lines.push(cur);
+          return lines.length ? lines : [""];
+        }
+        function line(str, o) {
+          o = o || {};
+          var size = o.size || 10.5, font = o.font || "F1", lh = o.lh || Math.round(size * 1.4);
+          if (o.gap) y -= o.gap;
+          ensure(lh);
+          fill(o.color || INK);
+          drawText(str, M + (o.x || 0), y, font, size);
+          y -= lh;
+        }
+        function para(str, o) {
+          o = o || {};
+          var size = o.size || 10.5, font = o.font || "F1", lh = o.lh || Math.round(size * 1.4);
+          if (o.gap) y -= o.gap;
+          wrap(str, font, size, CW - (o.x || 0)).forEach(function (ln) {
+            ensure(lh);
+            fill(o.color || INK);
+            drawText(ln, M + (o.x || 0), y, font, size);
+            y -= lh;
+          });
+        }
+        function section(str) {
+          y -= 12;
+          ensure(32);
+          fill(BRANDINK); drawText(str, M, y, "F2", 13.5);
+          y -= 7;
+          op(ORANGE + " RG"); op("1.4 w");
+          op(pdfNum(M) + " " + pdfNum(y) + " m " + pdfNum(M + CW) + " " + pdfNum(y) + " l S");
+          y -= 16;
+        }
+        function hline(yy, c, wdt) {
+          op((c || LINEC) + " RG"); op((wdt || 0.7) + " w");
+          op(pdfNum(M) + " " + pdfNum(yy) + " m " + pdfNum(M + CW) + " " + pdfNum(yy) + " l S");
+        }
+        function table(cols, rows, o) {
+          o = o || {};
+          var size = o.size || 10.5, lh = Math.round(size * 1.4);
+          ensure(lh + 12);
+          cols.forEach(function (c) {
+            var tx = M + c.x;
+            if (c.align === "right") tx = M + c.x + c.w - helvW(c.label.toUpperCase(), 8.5) * 1.03;
+            fill(GRAY); drawText(c.label.toUpperCase(), tx, y, "F2", 8.5);
+          });
+          y -= 6; hline(y); y -= lh + 1;
+          rows.forEach(function (r) {
+            var wrapped = cols.map(function (c, i) { return wrap(r[i] || "", (o.boldFirst && i === 0) ? "F2" : "F1", size, c.w - 4); });
+            var n = 1;
+            wrapped.forEach(function (w) { if (w.length > n) n = w.length; });
+            ensure(n * lh + 6);
+            var topY = y;
+            wrapped.forEach(function (lines, i) {
+              var c = cols[i];
+              lines.forEach(function (ln, li) {
+                var tx = M + c.x;
+                if (c.align === "right") tx = M + c.x + c.w - helvW(ln, size);
+                fill(INK); drawText(ln, tx, topY - li * lh, (o.boldFirst && i === 0) ? "F2" : "F1", size);
+              });
+            });
+            y = topY - n * lh - 2;
+            hline(y + 5);
+            y -= 4;
+          });
+        }
+        function totalRow(label, value) {
+          ensure(24);
+          hline(y + 9, ORANGE, 1.2);
+          fill(INK); drawText(label, M, y, "F2", 11);
+          fill(BRANDINK); drawText(value, M + CW - helvW(value, 11) * 1.03, y, "F2", 11);
+          y -= 20;
+        }
+        function infoBox(lines) {
+          var size = 11, lh = 17, pad = 12;
+          var h = lines.length * lh + pad * 2 - 6;
+          ensure(h + 6);
+          var top = y + size + 4;
+          fill(SOFT); op(pdfNum(M) + " " + pdfNum(top - h) + " " + pdfNum(CW) + " " + pdfNum(h) + " re f");
+          var yy = y;
+          lines.forEach(function (ln) {
+            fill(INK); drawText(ln, M + pad, yy, "F1", size);
+            yy -= lh;
+          });
+          y = top - h - 10;
+        }
+        function finish() {
+          pages.push(ops.join("\n"));
+          var total = pages.length;
+          var done = pages.map(function (p, i) {
+            var label = "Página " + (i + 1) + " de " + total;
+            var x = (W - helvW(label, 8.5)) / 2;
+            return p + "\n" + GRAY + " rg\nBT /F1 8.5 Tf 1 0 0 1 " + pdfNum(x) + " 30 Tm (" + pdfEsc(pdfClean(label)) + ") Tj ET";
+          });
+          return buildPdfBlob(done);
+        }
+        startPage();
+        return {
+          line: line, para: para, section: section, table: table,
+          totalRow: totalRow, infoBox: infoBox, finish: finish,
+          pal: { gray: GRAY, brandInk: BRANDINK, ink: INK }, CW: CW
+        };
+      }
+      function downloadPdfBlob(filename, blob) {
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function () {
+          if (a.parentNode) a.parentNode.removeChild(a);
+          URL.revokeObjectURL(url);
+        }, 500);
+      }
+      function fechaGeneracion() {
+        return new Date().toLocaleDateString("es-VE", { day: "numeric", month: "long", year: "numeric" });
+      }
+      var APORTES_COLS = [
+        { label: "Proveedor", x: 0, w: 250 },
+        { label: "Tipo", x: 256, w: 144 },
+        { label: "Monto", x: 406, w: 93, align: "right" }
+      ];
+      function aportesRows(lista) {
+        return lista.map(function (a) {
+          var m = (a.monto === null || a.monto === undefined || a.monto === "") ? null : Number(a.monto);
+          var tieneMonto = m !== null && !isNaN(m);
+          return [a.proveedor || "", a.tipo || "", tieneMonto ? fmtMoney(m) : "En especie"];
+        });
+      }
+      /* ---------- PDF de Sorteos ---------- */
+      function descargarPdfSorteos() {
+        try {
+          var doc = createPdfDoc();
+          doc.line("SORTEOS", { font: "F2", size: 21, lh: 26 });
+          doc.line("Generado el " + fechaGeneracion() + " · Datos en vivo del panel del equipo", { size: 10, color: doc.pal.gray });
+          var mega = null;
+          state.sorteos.forEach(function (s) {
+            if (!mega && String(s.nombre || "").toLowerCase().indexOf("mega sorteo") !== -1) mega = s;
+          });
+          var tituloMega = mega ? mega.nombre : "Mega Sorteo Fin de Año";
+          doc.section(tituloMega + " — Progreso de aportes");
+          var d = megaSorteoDatos();
+          if (d) {
+            doc.infoBox([
+              "Meta: " + fmtMoney(d.meta),
+              "Confirmados: " + fmtMoney(d.confirmados) + " (" + fmtPct(d.pct) + " de la meta)",
+              d.faltan > 0 ? "Faltan: " + fmtMoney(d.faltan) : "¡Meta alcanzada!"
+            ]);
+          } else {
+            doc.para("Confirmados: " + fmtMoney(aportesSuma("megasorteo")) + " en aportes de proveedores.");
+          }
+          if (mega && mega.descripcion) doc.para(mega.descripcion, { size: 10 });
+          if (mega && mega.notas) doc.para(mega.notas, { size: 10, color: doc.pal.gray });
+          doc.section("Aportes de proveedores — Mega Sorteo");
+          var listaMega = aportesDe("megasorteo");
+          if (listaMega.length) {
+            doc.table(APORTES_COLS, aportesRows(listaMega), { boldFirst: true });
+            if (aportesSuma("megasorteo") > 0) doc.totalRow("Total confirmado", fmtMoney(aportesSuma("megasorteo")));
+          } else {
+            doc.para("Todavía no hay aportes registrados para el Mega Sorteo.");
+          }
+          doc.section("Todos los sorteos");
+          if (state.sorteos.length) {
+            var ordenados = state.sorteos.slice().sort(function (a, b) {
+              if (a.estado !== b.estado) return a.estado === "pendiente" ? -1 : 1;
+              return String(a.fecha || "9999").localeCompare(String(b.fecha || "9999"));
+            });
+            doc.table([
+              { label: "Sorteo", x: 0, w: 212 },
+              { label: "Fecha", x: 218, w: 88 },
+              { label: "Estado", x: 312, w: 82 },
+              { label: "Responsable", x: 400, w: 99 }
+            ], ordenados.map(function (s) {
+              return [s.nombre || "", s.fecha ? fmtDate(s.fecha) : "Sin fecha", s.estado === "realizado" ? "Realizado" : "Pendiente", s.responsable || ""];
+            }), { boldFirst: true });
+          } else {
+            doc.para("Todavía no hay sorteos registrados.");
+          }
+          downloadPdfBlob("karispace-sorteos.pdf", doc.finish());
+          toast("PDF de sorteos descargado");
+        } catch (err) {
+          showBanner("err", "No se pudo generar el PDF de sorteos: " + err.message);
+          toast("No se pudo generar el PDF de sorteos", true);
+        }
+      }
+      /* ---------- PDF de Actividades ---------- */
+      function fechasActTxt(a) {
+        if (!a.fecha_inicio) return "Sin fecha";
+        var t = fmtDate(a.fecha_inicio);
+        if (a.fecha_fin) t += " - " + fmtDate(a.fecha_fin);
+        return t;
+      }
+      function descargarPdfActividades() {
+        try {
+          var doc = createPdfDoc();
+          doc.line("ACTIVIDADES", { font: "F2", size: 21, lh: 26 });
+          doc.line("Generado el " + fechaGeneracion() + " · Datos en vivo del panel del equipo", { size: 10, color: doc.pal.gray });
+          doc.section("Actividades registradas");
+          if (state.actividades.length) {
+            doc.table([
+              { label: "Actividad", x: 0, w: 246 },
+              { label: "Fechas", x: 252, w: 148 },
+              { label: "Estado", x: 406, w: 93 }
+            ], state.actividades.map(function (a) {
+              return [a.nombre || "", fechasActTxt(a), cap(a.estado)];
+            }), { boldFirst: true });
+          } else {
+            doc.para("Todavía no hay actividades registradas.");
+          }
+          doc.section("Aniversarios — Aporte general para aniversarios");
+          doc.para("Aporte único por proveedor, para cubrir los gastos de las actividades de los tres aniversarios.", { size: 10 });
+          var listaAniv = aportesDe("aniversarios");
+          if (listaAniv.length) {
+            doc.table(APORTES_COLS, aportesRows(listaAniv), { boldFirst: true });
+            if (aportesSuma("aniversarios") > 0) doc.totalRow("Total en notas", fmtMoney(aportesSuma("aniversarios")));
+          } else {
+            doc.para("Todavía no hay aportes registrados para aniversarios.");
+          }
+          doc.section("Aniversarios — Actividades por sede");
+          SEDES_ANIV.forEach(function (sede) {
+            doc.line(sede, { font: "F2", size: 12, gap: 7, color: doc.pal.brandInk });
+            var acts = anivActsDe(sede);
+            if (acts.length) {
+              acts.forEach(function (x) {
+                doc.para(x.proveedor + (x.actividad ? " · " + x.actividad : ""), { x: 12 });
+              });
+            } else {
+              doc.para("Sin actividades registradas todavía.", { x: 12, size: 10, color: doc.pal.gray });
+            }
+          });
+          downloadPdfBlob("karispace-actividades.pdf", doc.finish());
+          toast("PDF de actividades descargado");
+        } catch (err) {
+          showBanner("err", "No se pudo generar el PDF de actividades: " + err.message);
+          toast("No se pudo generar el PDF de actividades", true);
+        }
       }
 
       /* ================= Arranque ================= */
