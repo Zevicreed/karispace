@@ -353,42 +353,43 @@ function descargarListado(){
   txt(M + 108, y - 13, 8.5, false, 'verifique a cada proveedor contra este listado al ingresar y marque la casilla «Verificado».', DARK);
   txt(M + 10, y - 25, 8.5, false, 'El vehículo del proveedor no permanece estacionado dentro durante la degustación: el estacionamiento es exclusivo para clientes.', DARK);
   y -= 50;
-  var cols = [
-    {t:'Proveedor', x:M, w:120, n:27}, {t:'Contacto', x:M + 124, w:78, n:17}, {t:'Teléfono', x:M + 206, w:64, n:14},
-    {t:'Tipo', x:M + 274, w:68, n:15}, {t:'Producto', x:M + 346, w:88, n:19},
-    {t:'Conexión a corriente', x:M + 438, w:48, n:10}, {t:'Verificado', x:M + 490, w:33, n:9}
-  ];
-  function headerTabla(){
-    var hl = cols.map(function(c){ return wrapTxt(c.t, c.n); });
-    var mx = 1; hl.forEach(function(l){ mx = Math.max(mx, l.length); });
-    var hh2 = mx * 10 + 7;
-    need(26 + hh2);
-    rect(M, y - hh2 + 8, W - 2 * M, hh2, '0.925 0.935 0.945', true);
-    for(var c=0;c<cols.length;c++) for(var l=0;l<hl[c].length;l++) txt(cols[c].x + 2, y - l * 10, 8.5, true, hl[c][l], DARK);
-    y -= hh2 - 2;
+var widths = [122, 80, 66, 70, 84, 52, 49];
+  var B = [M];
+  for(var wi=0; wi<widths.length; wi++) B.push(B[wi] + widths[wi]);
+  var HEAD = [['Proveedor'], ['Contacto'], ['Teléfono'], ['Tipo'], ['Producto'], ['Conexión a', 'corriente'], ['Verificado']];
+  var WRAPN = [26, 16, 13, 14, 17, 10, 8];
+  function gridRow(cellsLines, isHead, zebra, colorAll){
+    var lines = 1; cellsLines.forEach(function(l){ lines = Math.max(lines, l.length); });
+    var rh = lines * 10.5 + 10;
+    need(rh + 4);
+    var top = y;
+    if(isHead) rect(M, top - rh, W - 2 * M, rh, '0.925 0.935 0.945', true);
+    else if(zebra) rect(M, top - rh, W - 2 * M, rh, '0.978 0.98 0.985', true);
+    ops.push('0.6 w');
+    for(var c=0;c<7;c++){
+      rect(B[c], top - rh, widths[c], rh, '0.70 0.72 0.75', false);
+      var pad = (c === 6) ? 4 : 5;
+      for(var l=0;l<cellsLines[c].length;l++) txt(B[c] + pad, top - 13 - l * 10.5, isHead ? 8 : 8.5, isHead || c === 0, cellsLines[c][l], colorAll || DARK);
+    }
+    y = top - rh;
+    return top;
   }
   for(i=0;i<fs.length;i++){
     var f = fs[i];
     var rs = reservas.filter(function(r){ return r.funcion_id === f.id && r.estado === 'activa'; });
     var nc = rs.filter(function(r){ return r.corriente; }).length;
-    need(64);
+    need(70);
     txt(M, y, 11.5, true, 'Función ' + hora12(f.hora_inicio) + ' – ' + hora12(f.hora_fin), DARK);
     var der = rs.length + (rs.length === 1 ? ' reserva' : ' reservas') + ' · ' + nc + ' con corriente';
     txt(W - M - der.length * 4.3, y, 9, false, der, GRAY);
-    y -= 5; linea(M, y, W - M, '0.2 0.2 0.2', 0.9); y -= 10;
-    headerTabla();
-    if(!rs.length){ txt(M + 2, y, 9.5, false, 'Sin reservas en esta función.', GRAY); y -= 18; }
+    y -= 8;
+    gridRow(HEAD, true, false, null);
+    if(!rs.length) gridRow([['Sin reservas en esta función.'], [''], [''], [''], [''], [''], ['']], false, false, GRAY);
     for(j=0;j<rs.length;j++){
       var r = rs[j];
-      var cells = [ wrapTxt(r.proveedor, 27), wrapTxt(r.contacto || '—', 17), wrapTxt(r.telefono || '—', 14), wrapTxt(r.tipo, 15), wrapTxt(r.producto, 19), [r.corriente ? 'Sí' : 'No'], [''] ];
-      var lines = 1; for(var c2=0;c2<cells.length;c2++) lines = Math.max(lines, cells[c2].length);
-      var rh = lines * 11 + 7;
-      need(rh);
-      if(j % 2 === 1) rect(M, y - rh + 12, W - 2 * M, rh, '0.978 0.98 0.985', true);
-      for(var c3=0;c3<cells.length;c3++) for(var l2=0;l2<cells[c3].length;l2++) txt(cols[c3].x + 2, y - l2 * 11, 8.5, c3 === 0, cells[c3][l2], DARK);
-      rect(cols[6].x + 9, y - 4, 11, 11, '0.4 0.42 0.45', false);
-      y -= rh;
-      linea(M, y + 4, W - M, '0.93 0.93 0.93', 0.5);
+      var cells = [ wrapTxt(r.proveedor, WRAPN[0]), wrapTxt(r.contacto || '—', WRAPN[1]), wrapTxt(r.telefono || '—', WRAPN[2]), wrapTxt(r.tipo, WRAPN[3]), wrapTxt(r.producto, WRAPN[4]), [r.corriente ? 'Sí' : 'No'], [''] ];
+      var topR = gridRow(cells, false, j % 2 === 1, null);
+      rect(B[6] + widths[6] / 2 - 5.5, topR - 18, 11, 11, '0.35 0.37 0.40', false);
     }
     y -= 16;
   }
