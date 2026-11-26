@@ -99,7 +99,7 @@ input:focus,select:focus{outline:none;border-color:#F47C20}
 var API = 'https://ihntkekeitxwalswgtys.supabase.co/rest/v1/';
 var KEY = 'sb_publishable_F51Yn1v27IiG7vpZ0ZhDkA_0Hfnh_qM';
 var PIN = '2468';
-var eventos = [], funciones = [], reservas = [], eventoSel = null, esAdmin = false;
+var eventos = [], funciones = [], reservas = [], eventoSel = null, esAdmin = false, editando = null;
 
 function $(id){ return document.getElementById(id); }
 function err(msg){ var e = $('err'); if(!msg){ e.style.display='none'; return; } e.textContent = msg; e.style.display='block'; }
@@ -237,7 +237,7 @@ function pintarAdmin(){
     for(var i=0;i<funciones.length;i++){
       var f = funciones[i];
       if(f.evento_id !== eventoSel) continue;
-      if(hi < f.hora_fin && hf > f.hora_inicio) choca = f;
+      if(hi < f.hora_fin.slice(0,5) && hf > f.hora_inicio.slice(0,5)) choca = f;
     }
     if(choca) return err('Esa función choca con la de ' + hora12(choca.hora_inicio) + ' – ' + hora12(choca.hora_fin) + '. Las funciones van encadenadas, sin chocar.');
     api('aniv_funciones', { method: 'POST', body: { evento_id: eventoSel, hora_inicio: hi, hora_fin: hf, cupos: cup } }).then(function(){ cargar(); }).catch(function(){ err('No se pudo crear la función.'); });
@@ -247,7 +247,10 @@ function pintarAdmin(){
   for(var k=0;k<fs.length;k++){
     var f = fs[k], rs = reservas.filter(function(r){ return r.funcion_id === f.id && r.estado === 'activa'; });
     var ncorr = rs.filter(function(r){ return r.corriente; }).length;
-    L += '<table><thead><tr><th colspan="4">Función ' + hora12(f.hora_inicio) + ' – ' + hora12(f.hora_fin) + ' · ' + rs.length + '/' + f.cupos + ' cupos' + (ncorr ? ' · ' + ncorr + ' piden corriente' : '') + ' &nbsp;<button class="mini rojo" data-delf="' + f.id + '">Eliminar función</button></th></tr></thead><tbody>';
+    L += '<table><thead><tr><th colspan="4">Función ' + hora12(f.hora_inicio) + ' – ' + hora12(f.hora_fin) + ' · ' + rs.length + '/' + f.cupos + ' cupos' + (ncorr ? ' · ' + ncorr + ' piden corriente' : '') + ' &nbsp;<button class="mini" data-editf="' + f.id + '">Editar</button> <button class="mini rojo" data-delf="' + f.id + '">Eliminar función</button></th></tr></thead><tbody>';
+    if(editando === f.id){
+      L += '<tr><td colspan="4"><div class="row"><div><label>Inicio</label><input type="time" id="e-hi" value="' + f.hora_inicio.slice(0,5) + '"></div><div><label>Fin</label><input type="time" id="e-hf" value="' + f.hora_fin.slice(0,5) + '"></div><div><label>Cupos</label><input type="number" id="e-cup" value="' + f.cupos + '" min="1" max="60"></div><div><button class="btn" data-savef="' + f.id + '">Guardar cambios</button></div><div><button class="btn ghost" data-cancf="1">Cancelar</button></div></div><div class="err" id="eerr" style="margin-top:10px"></div></td></tr>';
+    }
     if(!rs.length) L += '<tr><td colspan="4" style="color:#8a94a0">Sin reservas todavía.</td></tr>';
     for(var m=0;m<rs.length;m++){
       var r = rs[m];
@@ -258,6 +261,28 @@ function pintarAdmin(){
   $('a-list').innerHTML = L || '<p style="margin-top:14px;color:#8a94a0;font-size:14px">Esta sede aún no tiene funciones creadas.</p>';
   var dels = document.querySelectorAll('[data-delf]');
   for(var d=0;d<dels.length;d++) dels[d].addEventListener('click', function(){ if(confirm('¿Eliminar esta función y sus reservas?')){ api('aniv_funciones?id=eq.' + this.getAttribute('data-delf'), { method: 'DELETE' }).then(function(){ cargar(); }); } });
+  var eds = document.querySelectorAll('[data-editf]');
+  for(var e2=0;e2<eds.length;e2++) eds[e2].addEventListener('click', function(){ editando = this.getAttribute('data-editf'); pintarAdmin(); });
+  var canc = document.querySelector('[data-cancf]');
+  if(canc) canc.addEventListener('click', function(){ editando = null; pintarAdmin(); });
+  var sav = document.querySelector('[data-savef]');
+  if(sav) sav.addEventListener('click', function(){
+    var fid = this.getAttribute('data-savef');
+    var hi = $('e-hi').value, hf = $('e-hf').value, cup = parseInt($('e-cup').value, 10);
+    function eerr(m){ var x = $('eerr'); x.textContent = m; x.style.display = 'block'; }
+    if(!hi || !hf || !cup) return eerr('Completa inicio, fin y cupos.');
+    if(hf <= hi) return eerr('La hora de fin debe ser después de la de inicio.');
+    var choca = null;
+    for(var i=0;i<funciones.length;i++){
+      var f = funciones[i];
+      if(f.evento_id !== eventoSel || f.id === fid) continue;
+      if(hi < f.hora_fin.slice(0,5) && hf > f.hora_inicio.slice(0,5)) choca = f;
+    }
+    if(choca) return eerr('Choca con la función de ' + hora12(choca.hora_inicio) + ' – ' + hora12(choca.hora_fin) + '. Las funciones van encadenadas, sin chocar.');
+    var nres = reservas.filter(function(r){ return r.funcion_id === fid && r.estado === 'activa'; }).length;
+    if(cup < nres) return eerr('Ya hay ' + nres + ' reservas activas en esta función: los cupos no pueden bajar de ' + nres + '.');
+    api('aniv_funciones?id=eq.' + fid, { method: 'PATCH', body: { hora_inicio: hi, hora_fin: hf, cupos: cup } }).then(function(){ editando = null; cargar(); }).catch(function(){ eerr('No se pudieron guardar los cambios.'); });
+  });
   var cans = document.querySelectorAll('[data-can]');
   for(var c=0;c<cans.length;c++) cans[c].addEventListener('click', function(){ api('aniv_reservas?id=eq.' + this.getAttribute('data-can'), { method: 'PATCH', body: { estado: 'cancelada' } }).then(function(){ cargar(); }); });
 }
