@@ -498,6 +498,57 @@
         * { animation: none !important; transition: none !important; }
       }
 
+      /* ---------- Pantalla de bloqueo con PIN (antes de todo el panel) ---------- */
+      .pin-lock {
+        position: fixed; inset: 0; z-index: 1000;
+        background: var(--bg);
+        display: flex; align-items: center; justify-content: center;
+        padding: 22px; overflow-y: auto;
+      }
+      .pin-lock.hidden { display: none !important; }
+      .pin-card {
+        background: var(--surface); border-radius: 20px; box-shadow: var(--shadow);
+        width: 100%; max-width: 380px; padding: 34px 28px 28px; text-align: center;
+        border-top: 6px solid var(--brand);
+      }
+      .pin-logo { width: 84px; height: 84px; display: block; margin: 0 auto 14px; }
+      .pin-card h1 { font-size: 30px; margin: 0; letter-spacing: .4px; }
+      .pin-card h1 .sp { color: var(--brand); }
+      .pin-card h1 .yd { color: var(--yellow); }
+      .pin-sub { color: var(--ink-2); font-size: 14px; font-weight: 600; margin: 6px 0 22px; }
+      .pin-card label { display: block; text-align: left; font-size: 13px; font-weight: 700; margin-bottom: 6px; }
+      .pin-input {
+        width: 100%; border: 1.5px solid var(--line); background: var(--bg); border-radius: 12px;
+        padding: 13px 14px; font-size: 22px; text-align: center; letter-spacing: 10px; font-weight: 700;
+      }
+      .pin-input:focus { outline: 2px solid var(--brand); outline-offset: 0; border-color: var(--brand); }
+      .pin-error {
+        display: none; background: var(--bad-soft); color: var(--bad); border-radius: 10px;
+        padding: 10px 13px; font-size: 13.5px; font-weight: 600; margin-top: 13px;
+      }
+      .pin-error.show { display: block; }
+      .pin-btn {
+        width: 100%; margin-top: 16px; border: 0; border-radius: 12px; padding: 13px 16px;
+        background: var(--brand); color: #FFFFFF; font-weight: 700; font-size: 15.5px;
+        box-shadow: 0 6px 16px rgba(244,124,32,.35);
+        display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      }
+      .pin-btn:hover { background: var(--brand-deep); }
+      .pin-btn svg { width: 17px; height: 17px; }
+      @keyframes pinShake { 0%,100% { transform: translateX(0); } 20%,60% { transform: translateX(-7px); } 40%,80% { transform: translateX(7px); } }
+      .pin-card.shake { animation: pinShake .4s ease; }
+      .lock-btn {
+        border: 1.5px solid var(--line); background: var(--bar-bg); color: var(--nav-ink);
+        border-radius: 99px; padding: 8px 13px; display: inline-flex; align-items: center; gap: 6px;
+        font-weight: 700; font-size: 13px; white-space: nowrap;
+      }
+      .lock-btn:hover { border-color: var(--brand); color: var(--ink); }
+      .lock-btn svg { width: 15px; height: 15px; color: var(--brand); }
+      @media (max-width: 760px) {
+        .lock-btn { padding: 8px 10px; }
+        .lock-btn span { display: none; }
+      }
+
       /* ---------- Ocultar la insignia «Powered by Netlify» inyectada por el hosting ---------- */
       .netlify-badge, #netlify-badge, #nl-badge-frame, [data-netlify-badge], .netlify-credit,
       #powered-by-netlify, div[class*="netlify" i], div[id*="netlify" i],
@@ -511,6 +562,33 @@
     </style>
   </head>
   <body>
+    <!-- Bloqueo con PIN: se pinta desde el primer momento, por encima de todo el panel.
+         Si el dispositivo ya entró antes (localStorage), el script siguiente lo oculta al instante. -->
+    <div class="pin-lock" id="pinLock" role="dialog" aria-modal="true" aria-labelledby="pinTitle">
+      <form class="pin-card" id="pinForm" autocomplete="off">
+        <svg class="pin-logo" viewBox="0 0 64 64" aria-hidden="true"><rect width="64" height="64" rx="14" fill="#F47C20"/><text x="29" y="46" text-anchor="middle" font-family="Arial,Helvetica,sans-serif" font-size="40" font-weight="900" fill="#FFFFFF">K</text><circle cx="47" cy="42" r="5" fill="#FFD100"/></svg>
+        <h1 id="pinTitle">Kari<span class="sp">Space</span><span class="yd">.</span></h1>
+        <p class="pin-sub">Panel del equipo Kari · Acceso con PIN</p>
+        <label for="pinInput">PIN del equipo</label>
+        <input class="pin-input" id="pinInput" type="password" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" aria-describedby="pinError" />
+        <div class="pin-error" id="pinError" role="alert"></div>
+        <button class="pin-btn" type="submit">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          Entrar
+        </button>
+      </form>
+    </div>
+    <script>
+      /* Si este dispositivo ya desbloqueó antes, el candado ni se muestra. */
+      (function () {
+        try {
+          if (window.localStorage.getItem("karispace_pin_ok") === "1") {
+            document.getElementById("pinLock").classList.add("hidden");
+          }
+        } catch (e) {}
+      })();
+    </script>
+
     <header class="topbar">
       <div class="topbar-in">
         <div class="wordmark">Kari<span class="sp">Space</span><span class="yd">.</span></div>
@@ -518,6 +596,10 @@
         <button class="refresh-btn" id="refreshBtn" type="button" title="Actualizar datos">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
           <span>Actualizar</span>
+        </button>
+        <button class="lock-btn" id="lockBtn" type="button" title="Bloquear el panel en este dispositivo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>
+          <span>Bloquear</span>
         </button>
       </div>
     </header>
@@ -2000,6 +2082,58 @@
         /* Refuerzo por si la inyección llega tarde */
         var n = 0;
         var timer = setInterval(function () { sweep(); if (++n > 20) clearInterval(timer); }, 500);
+      })();
+    </script>
+    <script>
+      /* ================= Candado con PIN del equipo =================
+         El mismo PIN del acceso del equipo en Reservas. Al acertar, el
+         dispositivo queda desbloqueado (localStorage) y no lo pide de nuevo;
+         el botón «Bloquear» del encabezado vuelve a cerrar el panel. */
+      (function () {
+        "use strict";
+        var TEAM_PIN = "2468";
+        var lock = document.getElementById("pinLock");
+        var form = document.getElementById("pinForm");
+        var input = document.getElementById("pinInput");
+        var error = document.getElementById("pinError");
+        var card = form;
+        function isUnlocked() {
+          try { return window.localStorage.getItem("karispace_pin_ok") === "1"; } catch (e) { return false; }
+        }
+        function showLock() {
+          lock.classList.remove("hidden");
+          error.textContent = "";
+          error.classList.remove("show");
+          input.value = "";
+          setTimeout(function () { input.focus(); }, 60);
+        }
+        function hideLock() { lock.classList.add("hidden"); }
+        if (isUnlocked()) hideLock(); else setTimeout(function () { input.focus(); }, 60);
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (input.value === TEAM_PIN) {
+            try { window.localStorage.setItem("karispace_pin_ok", "1"); } catch (err) {}
+            error.textContent = "";
+            error.classList.remove("show");
+            hideLock();
+          } else {
+            error.textContent = "PIN incorrecto. Revísalo e inténtalo de nuevo.";
+            error.classList.add("show");
+            input.value = "";
+            input.focus();
+            card.classList.remove("shake");
+            void card.offsetWidth;
+            card.classList.add("shake");
+          }
+        });
+        var lockBtn = document.getElementById("lockBtn");
+        if (lockBtn) {
+          lockBtn.addEventListener("click", function () {
+            try { window.localStorage.removeItem("karispace_pin_ok"); } catch (e) {}
+            showLock();
+            window.scrollTo({ top: 0 });
+          });
+        }
       })();
     </script>
   </body>
