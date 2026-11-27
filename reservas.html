@@ -58,6 +58,7 @@ input:focus,select:focus{outline:none;border-color:#F47C20}
 .radio button{flex:1;padding:12px;border:2px solid #E4E7EC;background:#fff;border-radius:10px;font-family:'Montserrat';font-weight:700;font-size:15.5px;cursor:pointer;color:#5a6472}
 .radio button.on{border-color:#F47C20;background:#FFF4E5;color:#B35A00}
 .check{display:flex;gap:10px;align-items:flex-start;background:#FFF1F2;border:2px solid #F5B5B0;border-radius:12px;padding:12px 14px;margin-top:18px}
+.nota{background:#FFF7EA;border-left:4px solid #F47C20;border-radius:8px;padding:10px 14px;margin-top:14px;font-size:13.5px;line-height:1.55;color:#6B5636}
 .check input{width:20px;height:20px;flex:none;margin-top:2px}
 .check p{font-size:13.5px;line-height:1.55;color:#7A271A}
 .ok{text-align:center;padding:10px 0}
@@ -176,6 +177,7 @@ function abrirForm(fid){
     + '<label>Producto a degustar *</label><input id="f-prod" placeholder="Ej. Pan de jamón, quesos, café…">'
     + '<label>¿Necesitas conexión a corriente?</label><div class="radio"><button type="button" id="c-si">Sí, necesito</button><button type="button" id="c-no">No necesito</button></div>'
     + '<div class="check"><input type="checkbox" id="f-park"><p><b>Me comprometo:</b> no dejaré mi vehículo estacionado dentro del hipermercado durante la degustación. El estacionamiento es exclusivo para los clientes.</p></div>'
+    + '<p class="nota"><b>Nota:</b> cada proveedor realiza su degustación con sus propios productos. Hipermercado Kari no suministra los productos a degustar.</p>'
     + '<div class="err" id="ferr" style="margin-top:14px"></div>'
     + '<button class="btn" id="f-send" style="margin-top:16px">Confirmar reserva</button>'
     + '<button class="btn ghost" id="f-close" style="margin-top:10px">Volver</button>';
@@ -208,6 +210,7 @@ function enviar(fid){
       + '<p>Tu cupo quedó registrado, <b>' + prov + '</b>.</p>'
       + '<div class="ticket"><b>Kari ' + ev.sede + '</b> · ' + fechaLarga(ev.fecha) + '<br>Función: <b>' + hora12(f.hora_inicio) + ' – ' + hora12(f.hora_fin) + '</b><br>Tipo: ' + tipo + '<br>Producto: ' + prod + '<br>Conexión a corriente: ' + (corrienteSel ? 'Sí' : 'No') + '</div>'
       + '<p><b>Recuerda:</b> el estacionamiento es exclusivo para clientes — no dejes tu vehículo dentro durante la degustación. Descarga, ubícalo fuera y a degustar.</p>'
+      + '<p><b>Importante:</b> trae los productos de tu degustación — cada proveedor degusta con su propia mercancía; Hipermercado Kari no suministra los productos a degustar.</p>'
       + '<button class="btn" id="ok-close" style="margin-top:16px">Entendido</button></div>';
     $('ok-close').addEventListener('click', function(){ cerrar(); cargar(); });
   }).catch(function(e){ $('f-send').disabled = false; $('f-send').textContent = 'Confirmar reserva'; ferr(e.message || 'No se pudo guardar la reserva. Inténtalo de nuevo.'); });
